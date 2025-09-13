@@ -120,7 +120,7 @@
   </div>
 
   <div class="ranking">
-    <h2>🏆 Ranking Poker Piscine</h2>
+    <h2>🏆 Ranking Poker</h2>
     <table id="rankingTable">
       <tr>
         <th>Posição</th>
@@ -208,10 +208,10 @@
           const celulaBotoes = linha.insertCell();
           [
             { valor: 10, nome: 'Presença', classe: 'btn-presenca', adicionaPresenca: true, adicionaVitoria: false },
-            { valor: 50, nome: 'Segundo', classe: 'btn-segundo', adicionaPresenca: false, adicionaVitoria: false },
-            { valor: 75, nome: 'Terceiro', classe: 'btn-terceiro', adicionaPresenca: false, adicionaVitoria: false },
-            { valor: 60, nome: 'Quarto', classe: 'btn-quarto', adicionaPresenca: false, adicionaVitoria: false },
-            { valor: 40, nome: 'Quinto', classe: 'btn-quinto', adicionaPresenca: false, adicionaVitoria: false },
+            { valor: 80, nome: 'Segundo', classe: 'btn-segundo', adicionaPresenca: false, adicionaVitoria: false },
+            { valor: 60, nome: 'Terceiro', classe: 'btn-terceiro', adicionaPresenca: false, adicionaVitoria: false },
+            { valor: 40, nome: 'Quarto', classe: 'btn-quarto', adicionaPresenca: false, adicionaVitoria: false },
+            { valor: 20, nome: 'Quinto', classe: 'btn-quinto', adicionaPresenca: false, adicionaVitoria: false },
             { valor: 100, nome: 'Campeão', classe: 'btn-campeao', adicionaPresenca: false, adicionaVitoria: true }
           ].forEach(item => {
             const btn = document.createElement("button");
