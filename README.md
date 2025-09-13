@@ -1,5 +1,5 @@
 Ranking Poker
-<!DOCTYPE html>
+<Ranking Poker Home Ras>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
