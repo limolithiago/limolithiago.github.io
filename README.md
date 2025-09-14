@@ -49,10 +49,11 @@
     .ranking h2 {
       text-align: center;
       margin-bottom: 15px;
-      color: #ffcc00;
+      color: #222; /* escuro */
       text-transform: uppercase;
       font-weight: bold;
       font-size: 22px;
+      text-decoration: underline; /* sublinhado */
     }
 
     .legenda {
@@ -115,7 +116,14 @@
       color: #000;
     }
 
-    #rankingExport h2 { text-align: center; color: #ffcc00; font-size: 20px; margin-bottom: 15px; }
+    #rankingExport h2 {
+      text-align: center;
+      color: #222; /* escuro também no export */
+      font-size: 20px;
+      margin-bottom: 15px;
+      font-weight: bold;
+      text-decoration: underline; /* sublinhado */
+    }
     #rankingExport table { width: 100%; border-collapse: collapse; }
     #rankingExport th, #rankingExport td { padding: 6px; text-align: center; border: 1px solid #a1887f; color: #000; }
     #rankingExport th { background-color: #ffcc00; color: #000; }
