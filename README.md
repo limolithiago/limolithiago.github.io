@@ -51,7 +51,7 @@
   .ranking h2 {
     text-align: center;
     margin-bottom: 15px;
-    color: #3e2723;
+    color: #ffe082; /* cor clara para título */
     text-transform: uppercase;
     font-weight: bold;
     font-size: 22px;
@@ -126,7 +126,7 @@
     color: #fff;
     font-weight: bold;
   }
-  #rankingExport h2 { text-align: center; color: #3e2723; font-size: 20px; margin-bottom: 15px; }
+  #rankingExport h2 { text-align: center; color: #ffe082; font-size: 20px; margin-bottom: 15px; }
   #rankingExport table { width: 100%; border-collapse: collapse; }
   #rankingExport th, #rankingExport td { padding: 6px; text-align: center; border: 1px solid #a1887f; color: #000; }
   #rankingExport th { background-color: #ffcc00; color: #000; }
@@ -178,121 +178,124 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-  let nomes = [
-    "Vitor Augusto","RacBatis","Briga","Jhow Jhow","Erick","Roque","Nono","Veinho","Rossi","Mario",
-    "Piscine","Limoli","Gabriel Vieira","Brunno","Victor Costa","Brian","Caio","Pit","Ale","Zaca",
-    "Gui Farias","Leo Conde","Guido","Caio Japa","Chicão","Yoshida","Arrais","Lucas Chaves","Mnafred","Rangel",
-    "Samuel","Allan","Dilam","Espeto","Gustavo Alemão","Mateus Grand","Ricardo Cipolli","Pedro Jesus","Boss","Phillipe",
-    "William","Mata","Mariana","Ronaldão","David","Dede","Bezerra","Edson Arrais","Henrique","Pedro Bolívia",
-    "Rafa Estefam","Danton","Koiti","Fe Gregio","Jorge"
-  ];
+let nomes = [
+  "Vitor Augusto","RacBatis","Briga","Jhow Jhow","Erick","Roque","Nono","Veinho","Rossi","Mario",
+  "Piscine","Limoli","Gabriel Vieira","Brunno","Victor Costa","Brian","Caio","Pit","Ale","Zaca",
+  "Gui Farias","Leo Conde","Guido","Caio Japa","Chicão","Yoshida","Arrais","Lucas Chaves","Mnafred","Rangel",
+  "Samuel","Allan","Dilam","Espeto","Gustavo Alemão","Mateus Grand","Ricardo Cipolli","Pedro Jesus","Boss","Phillipe",
+  "William","Mata","Mariana","Ronaldão","David","Dede","Bezerra","Edson Arrais","Henrique","Pedro Bolívia",
+  "Rafa Estefam","Danton","Koiti","Fe Gregio","Jorge"
+];
 
-  let jogadores = [];
-  if(localStorage.getItem("rankingJogadores")){
-    jogadores = JSON.parse(localStorage.getItem("rankingJogadores"));
-  } else {
-    jogadores = nomes.map(nome => ({ nome, pontos: 0, presencas: 0, vitorias: 0 }));
-  }
+let jogadores = [];
+if(localStorage.getItem("rankingJogadores")){
+  jogadores = JSON.parse(localStorage.getItem("rankingJogadores"));
+} else {
+  jogadores = nomes.map(nome => ({ nome, pontos: 0, presencas: 0, vitorias: 0 }));
+}
 
-  function atualizarTabela() {
-    const tabela = document.getElementById("rankingTable");
-    tabela.innerHTML = `<tr><th>Posição</th><th>Nome</th><th>Pontos</th><th>Presenças</th><th>Vitórias</th><th>Adicionar Pontos</th></tr>`;
+function atualizarTabela() {
+  const tabela = document.getElementById("rankingTable");
+  tabela.innerHTML = `<tr><th>Posição</th><th>Nome</th><th>Pontos</th><th>Presenças</th><th>Vitórias</th><th>Adicionar Pontos</th></tr>`;
 
-    jogadores.sort((a,b) => {
-      if(b.vitorias !== a.vitorias) return b.vitorias - a.vitorias;
-      if(b.presencas !== a.presencas) return b.presencas - a.presencas;
-      return b.pontos - a.pontos;
+  jogadores.sort((a,b) => {
+    if(b.vitorias !== a.vitorias) return b.vitorias - a.vitorias;
+    if(b.presencas !== a.presencas) return b.presencas - a.presencas;
+    return b.pontos - a.pontos;
+  });
+
+  for(let i=0;i<jogadores.length;i++){
+    const linha = tabela.insertRow();
+    const j = jogadores[i];
+
+    linha.insertCell().textContent = i+1;
+
+    let tdNome = linha.insertCell(); tdNome.textContent = j.nome; tdNome.contentEditable="true"; tdNome.onblur=()=>j.nome=tdNome.textContent;
+    let tdP = linha.insertCell(); tdP.textContent=j.pontos; tdP.contentEditable="true"; tdP.onblur=()=>j.pontos=parseInt(tdP.textContent)||0;
+    let tdPres = linha.insertCell(); tdPres.textContent=j.presencas; tdPres.contentEditable="true"; tdPres.onblur=()=>j.presencas=parseInt(tdPres.textContent)||0;
+    let tdVit = linha.insertCell(); tdVit.textContent=j.vitorias; tdVit.contentEditable="true"; tdVit.onblur=()=>j.vitorias=parseInt(tdVit.textContent)||0;
+
+    const celulaBotoes = linha.insertCell();
+    const containerBotoes = document.createElement("div");
+    containerBotoes.className = "botoes-container";
+
+    [
+      { valor:10, nome:'Presença', classe:'btn-presenca', adicionaPresenca:true },
+      { valor:80, nome:'Segundo', classe:'btn-segundo' },
+      { valor:60, nome:'Terceiro', classe:'btn-terceiro' },
+      { valor:40, nome:'Quarto', classe:'btn-quarto' },
+      { valor:20, nome:'Quinto', classe:'btn-quinto' },
+      { valor:100, nome:'Campeão', classe:'btn-campeao', adicionaVitoria:true }
+    ].forEach(item=>{
+      const btn=document.createElement("button");
+      btn.textContent=item.nome;
+      btn.className=`btn-pontos ${item.classe}`;
+      btn.onclick=()=>{
+        j.pontos+=item.valor;
+        if(item.adicionaPresenca) j.presencas+=1;
+        if(item.adicionaVitoria) j.vitorias+=1;
+        mostrarAnimacao(tdP, item.valor);
+        atualizarTabela();
+      };
+      containerBotoes.appendChild(btn);
     });
 
-    for(let i=0;i<jogadores.length;i++){
-      const linha = tabela.insertRow();
-      const j = jogadores[i];
+    celulaBotoes.appendChild(containerBotoes);
 
-      linha.insertCell().textContent = i+1;
-      let tdNome = linha.insertCell(); tdNome.textContent = j.nome; tdNome.contentEditable="true"; tdNome.onblur=()=>j.nome=tdNome.textContent;
-      let tdP = linha.insertCell(); tdP.textContent=j.pontos; tdP.contentEditable="true"; tdP.onblur=()=>j.pontos=parseInt(tdP.textContent)||0;
-      let tdPres=linha.insertCell(); tdPres.textContent=j.presencas; tdPres.contentEditable="true"; tdPres.onblur=()=>j.presencas=parseInt(tdPres.textContent)||0;
-      let tdVit=linha.insertCell(); tdVit.textContent=j.vitorias; tdVit.contentEditable="true"; tdVit.onblur=()=>j.vitorias=parseInt(tdVit.textContent)||0;
-
-      const celulaBotoes = linha.insertCell();
-      const containerBotoes = document.createElement("div");
-      containerBotoes.className = "botoes-container";
-
-      [
-        { valor:10, nome:'Presença', classe:'btn-presenca', adicionaPresenca:true },
-        { valor:80, nome:'Segundo', classe:'btn-segundo' },
-        { valor:60, nome:'Terceiro', classe:'btn-terceiro' },
-        { valor:40, nome:'Quarto', classe:'btn-quarto' },
-        { valor:20, nome:'Quinto', classe:'btn-quinto' },
-        { valor:100, nome:'Campeão', classe:'btn-campeao', adicionaVitoria:true }
-      ].forEach(item=>{
-        const btn=document.createElement("button");
-        btn.textContent=item.nome;
-        btn.className=`btn-pontos ${item.classe}`;
-        btn.onclick=()=>{
-          j.pontos+=item.valor;
-          if(item.adicionaPresenca) j.presencas+=1;
-          if(item.adicionaVitoria) j.vitorias+=1;
-          mostrarAnimacao(tdP, item.valor);
-          atualizarTabela();
-        };
-        containerBotoes.appendChild(btn);
-      });
-
-      celulaBotoes.appendChild(containerBotoes);
-
-      if(i<8) linha.classList.add("pos1_8");
-      else if(i<17) linha.classList.add("pos9_17");
-    }
+    if(i<8) linha.classList.add("pos1_8");
+    else if(i<17) linha.classList.add("pos9_17");
   }
+}
 
-  function mostrarAnimacao(celula, valor){
-    const anim = document.createElement("div");
-    anim.className = "animacao-pontos";
-    anim.textContent = `+${valor}`;
-    celula.style.position = "relative";
-    celula.appendChild(anim);
-    setTimeout(()=> anim.remove(), 1000);
+function mostrarAnimacao(celula, valor){
+  const anim = document.createElement("div");
+  anim.className = "animacao-pontos";
+  anim.textContent = `+${valor}`;
+  celula.style.position = "relative";
+  celula.appendChild(anim);
+  setTimeout(()=> anim.remove(), 1000);
+}
+
+function atualizarTabelaExport() {
+  const tabela = document.getElementById("exportTable");
+  tabela.innerHTML=`<tr><th>Posição</th><th>Nome</th><th>Pontos</th><th>Presenças</th><th>Vitórias</th></tr>`;
+  const hoje = new Date();
+  document.getElementById("exportTitulo").textContent=`🏆 Ranking Home Ras Poker 2025 - ${hoje.toLocaleDateString("pt-BR")}`;
+
+  jogadores.sort((a,b)=>{
+    if(b.vitorias!==a.vitorias) return b.vitorias-a.vitorias;
+    if(b.presencas!==a.presencas) return b.presencas-a.presencas;
+    return b.pontos-a.pontos;
+  });
+
+  for(let i=0;i<jogadores.length;i++){
+    const linha=tabela.insertRow(); const j=jogadores[i];
+    linha.insertCell().textContent=i+1;
+    linha.insertCell().textContent=j.nome;
+    linha.insertCell().textContent=j.pontos;
+    linha.insertCell().textContent=j.presencas;
+    linha.insertCell().textContent=j.vitorias;
+    if(i<8) linha.classList.add("pos1_8"); else if(i<17) linha.classList.add("pos9_17");
   }
+}
 
-  function atualizarTabelaExport() {
-    const tabela = document.getElementById("exportTable");
-    tabela.innerHTML=`<tr><th>Posição</th><th>Nome</th><th>Pontos</th><th>Presenças</th><th>Vitórias</th></tr>`;
-    const hoje = new Date();
-    document.getElementById("exportTitulo").textContent=`🏆 Ranking Home Ras Poker 2025 - ${hoje.toLocaleDateString("pt-BR")}`;
-    jogadores.sort((a,b)=>{
-      if(b.vitorias!==a.vitorias) return b.vitorias-a.vitorias;
-      if(b.presencas!==a.presencas) return b.presencas-a.presencas;
-      return b.pontos-a.pontos;
-    });
-    for(let i=0;i<jogadores.length;i++){
-      const linha=tabela.insertRow(); const j=jogadores[i];
-      linha.insertCell().textContent=i+1;
-      linha.insertCell().textContent=j.nome;
-      linha.insertCell().textContent=j.pontos;
-      linha.insertCell().textContent=j.presencas;
-      linha.insertCell().textContent=j.vitorias;
-      if(i<8) linha.classList.add("pos1_8"); else if(i<17) linha.classList.add("pos9_17");
-    }
-  }
+function salvarRanking(){ localStorage.setItem("rankingJogadores",JSON.stringify(jogadores)); alert("✅ Ranking salvo!"); }
+function adicionarJogador(){ let nome=prompt("Digite o nome do novo jogador:"); if(nome&&nome.trim()!==""){ jogadores.push({nome:nome.trim(),pontos:0,presencas:0,vitorias:0}); atualizarTabela(); } }
 
-  function salvarRanking(){ localStorage.setItem("rankingJogadores",JSON.stringify(jogadores)); alert("✅ Ranking salvo!"); }
-  function adicionarJogador(){ let nome=prompt("Digite o nome do novo jogador:"); if(nome&&nome.trim()!==""){ jogadores.push({nome:nome.trim(),pontos:0,presencas:0,vitorias:0}); atualizarTabela(); } }
+function exportarTabela(){
+  atualizarTabelaExport();
+  const container=document.getElementById("rankingExport");
+  container.style.display="block";
+  html2canvas(container).then(canvas=>{
+    const link=document.createElement("a");
+    link.download="ranking.png";
+    link.href=canvas.toDataURL();
+    link.click();
+    container.style.display="none";
+  });
+}
 
-  function exportarTabela(){
-    atualizarTabelaExport();
-    const container=document.getElementById("rankingExport");
-    container.style.display="block";
-    html2canvas(container).then(canvas=>{
-      const link=document.createElement("a");
-      link.download="ranking.png";
-      link.href=canvas.toDataURL();
-      link.click();
-      container.style.display="none";
-    });
-  }
-
-  atualizarTabela();
+atualizarTabela();
 </script>
 </body>
 </html>
