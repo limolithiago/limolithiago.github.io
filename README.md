@@ -1,15 +1,16 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <title>Ranking Piscine</title>
+  <title>Ranking Home Ras Poker 2025</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f5f5f5;
+      font-family: "Trebuchet MS", Arial, sans-serif;
+      background: #f4f1ea; /* tom madeira claro */
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin-top: 40px;
+      margin-top: 30px;
+      color: #3e2723; /* marrom escuro */
     }
 
     .topo {
@@ -20,32 +21,37 @@
     }
 
     .btn-salvar {
-      background: #28a745;
-      color: white;
+      background: #ffcc00;
+      color: #3e2723;
       border: none;
       padding: 10px 20px;
       border-radius: 5px;
       cursor: pointer;
       font-size: 16px;
+      font-weight: bold;
+      box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
     }
     .btn-salvar:hover {
-      background: #218838;
+      background: #ffb300;
     }
 
     .ranking {
-      background: #fff;
+      background: #fff8e1; /* amadeirado claro */
       padding: 20px;
       border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
       width: 750px;
       margin-bottom: 30px;
-      position: relative;
+      border: 2px solid #ffcc00;
     }
 
     .ranking h2 {
       text-align: center;
-      margin-bottom: 10px;
-      color: #333;
+      margin-bottom: 15px;
+      color: #3e2723;
+      text-transform: uppercase;
+      font-weight: bold;
+      font-size: 22px;
     }
 
     .legenda {
@@ -68,6 +74,7 @@
       width: 20px;
       height: 20px;
       border-radius: 3px;
+      border: 1px solid #3e2723;
     }
 
     .azul { background: #cce5ff; }
@@ -79,29 +86,35 @@
     }
 
     th, td {
-      padding: 12px;
+      padding: 8px; /* linhas mais finas */
       text-align: center;
-      border-bottom: 1px solid #ddd;
-      position: relative;
+      border-bottom: 1px solid #bbb;
+      border-right: 1px solid #ddd;
     }
 
-    th { background-color: #333; color: white; }
+    th {
+      background-color: #ffcc00;
+      color: #3e2723;
+      border-bottom: 2px solid #3e2723;
+      font-size: 14px;
+    }
+
     tr.pos1_8 td { background: #cce5ff; }
     tr.pos9_17 td { background: #ffcccc; }
     tr.empty td { color: #aaa; }
 
-    tr:hover { background-color: #f1f1f1; }
-    td[contenteditable="true"] { background: #ffffcc; }
+    tr:hover { background-color: #fff3cd; }
+
+    td[contenteditable="true"] { background: #fffde7; border: 1px dashed #ffcc00; }
 
     .btn-pontos {
-      padding: 6px 12px;
+      padding: 4px 10px;
       color: white;
       border: none;
-      border-radius: 5px;
-      font-size: 14px;
+      border-radius: 4px;
+      font-size: 12px;
       cursor: pointer;
-      margin: 2px;
-      transition: transform 0.2s, box-shadow 0.2s;
+      margin: 1px;
     }
 
     .btn-presenca { background: #4CAF50; }
@@ -115,7 +128,7 @@
 <body>
   <!-- Topo com botão salvar -->
   <div class="topo">
-    <div><h3>📋 Controle do Ranking</h3></div>
+    <div><h3>📋 Ranking Home Ras Poker 2025</h3></div>
     <button class="btn-salvar" onclick="salvarRanking()">💾 Salvar Ranking</button>
   </div>
 
@@ -126,7 +139,7 @@
   </div>
 
   <div class="ranking">
-    <h2>🏆 Ranking Poker</h2>
+    <h2>🏆 Ranking Home Ras Poker 2025</h2>
     <table id="rankingTable">
       <tr>
         <th>Posição</th>
@@ -151,7 +164,6 @@
 
     let jogadores = [];
 
-    // Carrega do localStorage ou cria zerado
     if(localStorage.getItem("rankingJogadores")){
       jogadores = JSON.parse(localStorage.getItem("rankingJogadores"));
     } else {
@@ -182,7 +194,6 @@
           linha.insertCell().textContent = i + 1;
           linha.insertCell().textContent = jogador.nome;
 
-          // Campos editáveis
           let tdPontos = linha.insertCell();
           tdPontos.textContent = jogador.pontos;
           tdPontos.contentEditable = "true";
@@ -198,10 +209,9 @@
           tdVit.contentEditable = "true";
           tdVit.onblur = () => jogador.vitorias = parseInt(tdVit.textContent) || 0;
 
-          // Botões
           const celulaBotoes = linha.insertCell();
           [
-            { valor: 10, nome: 'Presença', classe: 'btn-presenca', adicionaPresenca: true, adicionaVitoria: false },
+            { valor: 10, nome: 'Presença', classe: 'btn-presenca', adicionaPresenca: true },
             { valor: 80, nome: 'Segundo', classe: 'btn-segundo' },
             { valor: 60, nome: 'Terceiro', classe: 'btn-terceiro' },
             { valor: 40, nome: 'Quarto', classe: 'btn-quarto' },
