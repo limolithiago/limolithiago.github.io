@@ -1,4 +1,3 @@
-<Ranking Poker Home Ras>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -67,8 +66,8 @@
     }
 
     th { background-color: #333; color: white; }
-    tr.pos1_8 td { background: #cce5ff; } /* azul claro */
-    tr.pos9_17 td { background: #ffcccc; } /* vermelho claro */
+    tr.pos1_8 td { background: #cce5ff; }
+    tr.pos9_17 td { background: #ffcccc; }
     tr.empty td { color: #aaa; }
 
     tr { transition: all 0.5s ease; }
@@ -88,12 +87,12 @@
       transition: transform 0.2s, box-shadow 0.2s;
     }
 
-    .btn-presenca { background: #4CAF50; }   
-    .btn-segundo { background: #2196F3; }   
-    .btn-terceiro { background: #9C27B0; }  
-    .btn-quarto { background: #FF9800; }   
-    .btn-quinto { background: #795548; }   
-    .btn-campeao { background: #FF5722; }  
+    .btn-presenca { background: #4CAF50; }
+    .btn-segundo { background: #2196F3; }
+    .btn-terceiro { background: #9C27B0; }
+    .btn-quarto { background: #FF9800; }
+    .btn-quinto { background: #795548; }
+    .btn-campeao { background: #FF5722; }
 
     .btn-presenca:hover { background: #45a049; }
     .btn-segundo:hover { background: #1976D2; }
@@ -113,7 +112,7 @@
   </style>
 </head>
 <body>
-  <!-- Legenda das cores -->
+  <!-- Legenda -->
   <div class="legenda">
     <div><span class="azul"></span> Classificados para a mesa final semestral</div>
     <div><span class="vermelho"></span> Repescagem final</div>
@@ -133,50 +132,18 @@
     </table>
   </div>
 
-  <div class="formulario">
-    <h3>➕ Adicionar Jogador</h3>
-    <input type="text" id="nome" placeholder="Nome do jogador" required>
-    <input type="number" id="pontos" placeholder="Pontos" required>
-    <button onclick="adicionarJogador()">Adicionar</button>
-  </div>
-
-  <div class="formulario">
-    <h3>❌ Remover Jogador</h3>
-    <input type="text" id="removerNome" placeholder="Nome do jogador" required>
-    <button onclick="removerJogador()">Remover</button>
-  </div>
-
   <script>
-    // Jogadores fictícios preenchendo 27 posições
-    let jogadores = [
-      { nome: "Roque", pontos: 1500, presencas: 0, vitorias: 0 },
-      { nome: "Guido", pontos: 1450, presencas: 0, vitorias: 0 },
-      { nome: "Matheus", pontos: 1400, presencas: 0, vitorias: 0 },
-      { nome: "Brian", pontos: 1350, presencas: 0, vitorias: 0 },
-      { nome: "Limoli", pontos: 1300, presencas: 0, vitorias: 0 },
-      { nome: "Ana", pontos: 1250, presencas: 0, vitorias: 0 },
-      { nome: "Lucas", pontos: 1200, presencas: 0, vitorias: 0 },
-      { nome: "Carla", pontos: 1150, presencas: 0, vitorias: 0 },
-      { nome: "Pedro", pontos: 1100, presencas: 0, vitorias: 0 },
-      { nome: "Mariana", pontos: 1050, presencas: 0, vitorias: 0 },
-      { nome: "Felipe", pontos: 1000, presencas: 0, vitorias: 0 },
-      { nome: "Julia", pontos: 950, presencas: 0, vitorias: 0 },
-      { nome: "Tiago", pontos: 900, presencas: 0, vitorias: 0 },
-      { nome: "Fernanda", pontos: 850, presencas: 0, vitorias: 0 },
-      { nome: "Rafael", pontos: 800, presencas: 0, vitorias: 0 },
-      { nome: "Beatriz", pontos: 750, presencas: 0, vitorias: 0 },
-      { nome: "Rodrigo", pontos: 700, presencas: 0, vitorias: 0 },
-      { nome: "Patricia", pontos: 650, presencas: 0, vitorias: 0 },
-      { nome: "Bruno", pontos: 600, presencas: 0, vitorias: 0 },
-      { nome: "Carolina", pontos: 550, presencas: 0, vitorias: 0 },
-      { nome: "Diego", pontos: 500, presencas: 0, vitorias: 0 },
-      { nome: "Sandra", pontos: 450, presencas: 0, vitorias: 0 },
-      { nome: "Vitor", pontos: 400, presencas: 0, vitorias: 0 },
-      { nome: "Paula", pontos: 350, presencas: 0, vitorias: 0 },
-      { nome: "Igor", pontos: 300, presencas: 0, vitorias: 0 },
-      { nome: "Camila", pontos: 250, presencas: 0, vitorias: 0 },
-      { nome: "André", pontos: 200, presencas: 0, vitorias: 0 }
+    let nomes = [
+      "Vitor Augusto", "RacBatis", "Briga", "Jhow Jhow", "Erick", "Roque", "Nono", "Veinho", "Rossi", "Mario",
+      "Piscine", "Limoli", "Gabriel Vieira", "Brunno", "Victor Costa", "Brian", "Caio", "Pit", "Ale", "Zaca",
+      "Gui Farias", "Leo Conde", "Guido", "Caio Japa", "Chicão", "Yoshida", "Arrais", "Lucas Chaves", "Mnafred", "Rangel",
+      "Samuel", "Allan", "Dilam", "Espeto", "Gustavo Alemão", "Mateus Grand", "Ricardo Cipolli", "Pedro Jesus", "Boss", "Phillipe",
+      "William", "Mata", "Mariana", "Ronaldão", "David", "Dede", "Bezerra", "Edson Arrais", "Henrique", "Pedro Bolívia",
+      "Rafa Estefam", "Danton", "Koiti", "Fe Gregio", "Jorge"
     ];
+
+    // Cria a lista de jogadores com pontuação zerada
+    let jogadores = nomes.map(nome => ({ nome, pontos: 0, presencas: 0, vitorias: 0 }));
 
     function atualizarTabela() {
       const tabela = document.getElementById("rankingTable");
@@ -193,7 +160,7 @@
 
       jogadores.sort((a, b) => b.pontos - a.pontos);
 
-      for (let i = 0; i < 27; i++) {
+      for (let i = 0; i < 60; i++) {
         const linha = tabela.insertRow();
         linha.classList.add("fade-in");
 
@@ -248,26 +215,6 @@
       anim.textContent = `+${valor}`;
       linha.cells[2].appendChild(anim);
       setTimeout(() => anim.remove(), 1000);
-    }
-
-    function adicionarJogador() {
-      const nome = document.getElementById("nome").value.trim();
-      const pontos = parseInt(document.getElementById("pontos").value);
-      if (nome && !isNaN(pontos)) {
-        jogadores.push({ nome, pontos, presencas: 0, vitorias: 0 });
-        atualizarTabela();
-        document.getElementById("nome").value = "";
-        document.getElementById("pontos").value = "";
-      }
-    }
-
-    function removerJogador() {
-      const nomeRemover = document.getElementById("removerNome").value.trim();
-      if (nomeRemover) {
-        jogadores = jogadores.filter(j => j.nome.toLowerCase() !== nomeRemover.toLowerCase());
-        atualizarTabela();
-        document.getElementById("removerNome").value = "";
-      }
     }
 
     atualizarTabela();
