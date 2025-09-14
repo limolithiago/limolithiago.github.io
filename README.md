@@ -125,6 +125,11 @@
     .btn-quarto { background: #FF9800; }
     .btn-quinto { background: #795548; }
     .btn-campeao { background: #FF5722; }
+
+    /* tabela de exportação invisível */
+    #rankingExport {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -141,7 +146,7 @@
     <div><span class="vermelho"></span> Repescagem final</div>
   </div>
 
-  <!-- Ranking -->
+  <!-- Ranking com botões -->
   <div class="ranking" id="rankingContainer">
     <h2>🏆 Ranking Home Ras Poker 2025</h2>
     <table id="rankingTable">
@@ -152,6 +157,20 @@
         <th>Presenças</th>
         <th>Vitórias</th>
         <th>Adicionar Pontos</th>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Ranking somente para exportação -->
+  <div class="ranking" id="rankingExport">
+    <h2>🏆 Ranking Home Ras Poker 2025</h2>
+    <table id="exportTable">
+      <tr>
+        <th>Posição</th>
+        <th>Nome</th>
+        <th>Pontos</th>
+        <th>Presenças</th>
+        <th>Vitórias</th>
       </tr>
     </table>
   </div>
@@ -237,6 +256,34 @@
       }
     }
 
+    function atualizarTabelaExport() {
+      const tabela = document.getElementById("exportTable");
+      tabela.innerHTML = `
+        <tr>
+          <th>Posição</th>
+          <th>Nome</th>
+          <th>Pontos</th>
+          <th>Presenças</th>
+          <th>Vitórias</th>
+        </tr>
+      `;
+
+      jogadores.sort((a, b) => b.pontos - a.pontos);
+
+      for (let i = 0; i < jogadores.length; i++) {
+        const linha = tabela.insertRow();
+        const jogador = jogadores[i];
+        linha.insertCell().textContent = i + 1;
+        linha.insertCell().textContent = jogador.nome;
+        linha.insertCell().textContent = jogador.pontos;
+        linha.insertCell().textContent = jogador.presencas;
+        linha.insertCell().textContent = jogador.vitorias;
+
+        if(i < 8) linha.classList.add("pos1_8");
+        else if(i < 17) linha.classList.add("pos9_17");
+      }
+    }
+
     function salvarRanking(){
       localStorage.setItem("rankingJogadores", JSON.stringify(jogadores));
       alert("✅ Ranking salvo com sucesso!");
@@ -251,12 +298,15 @@
     }
 
     function exportarTabela(){
-      const container = document.getElementById("rankingContainer");
+      atualizarTabelaExport();
+      const container = document.getElementById("rankingExport");
+      container.style.display = "block";
       html2canvas(container).then(canvas => {
         const link = document.createElement("a");
         link.download = "ranking.png";
         link.href = canvas.toDataURL();
         link.click();
+        container.style.display = "none";
       });
     }
 
