@@ -6,12 +6,12 @@
   <style>
     body {
       font-family: "Trebuchet MS", Arial, sans-serif;
-      background: #3e2723;
+      background: #f5f5f5;
       display: flex;
       flex-direction: column;
       align-items: center;
       margin-top: 30px;
-      color: #fff;
+      color: #000;
     }
 
     .topo {
@@ -36,14 +36,14 @@
     .btn-salvar:hover, .btn-add:hover, .btn-exportar:hover { background: #ffb300; }
 
     .ranking {
-      background: #5d4037;
+      background: #f0e0c0;
       padding: 20px;
       border-radius: 10px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.2);
       width: 750px;
       margin-bottom: 30px;
       border: 2px solid #ffcc00;
-      color: #fff;
+      color: #000;
     }
 
     .ranking h2 {
@@ -62,21 +62,21 @@
       margin-bottom: 10px;
       gap: 20px;
       font-size: 14px;
-      color: #fff;
+      color: #000;
     }
 
     .legenda div { display: flex; align-items: center; gap: 5px; }
-    .legenda span { display: inline-block; width: 20px; height: 20px; border-radius: 3px; border: 1px solid #fff; }
+    .legenda span { display: inline-block; width: 20px; height: 20px; border-radius: 3px; border: 1px solid #000; }
     .azul { background: #81d4fa; }
     .vermelho { background: #ff8a80; }
 
     table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 6px; text-align: center; border-bottom: 1px solid #a1887f; border-right: 1px solid #a1887f; }
-    th { background-color: #ffcc00; color: #3e2723; border-bottom: 2px solid #3e2723; }
+    th, td { padding: 6px; text-align: center; border-bottom: 1px solid #a1887f; border-right: 1px solid #a1887f; color: #000; }
+    th { background-color: #ffcc00; color: #000; border-bottom: 2px solid #3e2723; }
     tr.pos1_8 td { background: #81d4fa; color: #000; }
     tr.pos9_17 td { background: #ff8a80; color: #000; }
-    tr.empty td { color: #ccc; }
-    tr:hover { background-color: rgba(255,255,255,0.1); }
+    tr.empty td { color: #555; }
+    tr:hover { background-color: rgba(0,0,0,0.05); }
 
     td[contenteditable="true"] {
       background: rgba(255,236,179,0.3);
@@ -91,22 +91,34 @@
     .btn-quinto { background: #795548; }
     .btn-campeao { background: #FF5722; }
 
-    /* Exportação para PNG */
+    .animacao-pontos {
+      position: absolute;
+      font-weight: bold;
+      color: #ff5722;
+      animation: subirFade 1s forwards;
+      pointer-events: none;
+      font-size: 14px;
+    }
+    @keyframes subirFade {
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-25px); }
+    }
+
     #rankingExport {
       display: none;
-      background: #5d4037;
+      background: #f0e0c0;
       padding: 20px;
       border-radius: 15px;
       border: 3px solid #ffcc00;
       box-shadow: 10px 10px 25px rgba(0,0,0,0.5);
       width: 750px;
-      color: #fff;
+      color: #000;
     }
 
     #rankingExport h2 { text-align: center; color: #ffcc00; font-size: 20px; margin-bottom: 15px; }
     #rankingExport table { width: 100%; border-collapse: collapse; }
-    #rankingExport th, #rankingExport td { padding: 6px; text-align: center; border: 1px solid #a1887f; }
-    #rankingExport th { background-color: #ffcc00; color: #3e2723; }
+    #rankingExport th, #rankingExport td { padding: 6px; text-align: center; border: 1px solid #a1887f; color: #000; }
+    #rankingExport th { background-color: #ffcc00; color: #000; }
     #rankingExport tr.pos1_8 td { background: #81d4fa; color: #000; }
     #rankingExport tr.pos9_17 td { background: #ff8a80; color: #000; }
   </style>
@@ -174,14 +186,15 @@
     tabela.innerHTML = `<tr><th>Posição</th><th>Nome</th><th>Pontos</th><th>Presenças</th><th>Vitórias</th><th>Adicionar Pontos</th></tr>`;
 
     jogadores.sort((a,b) => {
-      if(b.pontos!==a.pontos) return b.pontos - a.pontos;
-      if(b.vitorias!==a.vitorias) return b.vitorias - a.vitorias;
-      return b.presencas - a.presencas;
+      if(b.vitorias !== a.vitorias) return b.vitorias - a.vitorias;
+      if(b.presencas !== a.presencas) return b.presencas - a.presencas;
+      return b.pontos - a.pontos;
     });
 
     for(let i=0;i<jogadores.length;i++){
       const linha = tabela.insertRow();
       const j = jogadores[i];
+
       linha.insertCell().textContent = i+1;
       let tdNome = linha.insertCell(); tdNome.textContent = j.nome; tdNome.contentEditable="true"; tdNome.onblur=()=>j.nome=tdNome.textContent;
       let tdP = linha.insertCell(); tdP.textContent=j.pontos; tdP.contentEditable="true"; tdP.onblur=()=>j.pontos=parseInt(tdP.textContent)||0;
@@ -204,6 +217,7 @@
           j.pontos+=item.valor;
           if(item.adicionaPresenca) j.presencas+=1;
           if(item.adicionaVitoria) j.vitorias+=1;
+          mostrarAnimacao(tdP, item.valor);
           atualizarTabela();
         };
         celulaBotoes.appendChild(btn);
@@ -214,12 +228,25 @@
     }
   }
 
+  function mostrarAnimacao(celula, valor){
+    const anim = document.createElement("div");
+    anim.className = "animacao-pontos";
+    anim.textContent = `+${valor}`;
+    celula.style.position = "relative";
+    celula.appendChild(anim);
+    setTimeout(()=> anim.remove(), 1000);
+  }
+
   function atualizarTabelaExport() {
     const tabela = document.getElementById("exportTable");
     tabela.innerHTML=`<tr><th>Posição</th><th>Nome</th><th>Pontos</th><th>Presenças</th><th>Vitórias</th></tr>`;
     const hoje = new Date();
     document.getElementById("exportTitulo").textContent=`🏆 Ranking Home Ras Poker 2025 - ${hoje.toLocaleDateString("pt-BR")}`;
-    jogadores.sort((a,b)=>{if(b.pontos!==a.pontos)return b.pontos-a.pontos;if(b.vitorias!==a.vitorias)return b.vitorias-a.vitorias;return b.presencas-a.presencas;});
+    jogadores.sort((a,b)=>{
+      if(b.vitorias!==a.vitorias) return b.vitorias-a.vitorias;
+      if(b.presencas!==a.presencas) return b.presencas-a.presencas;
+      return b.pontos-a.pontos;
+    });
     for(let i=0;i<jogadores.length;i++){
       const linha=tabela.insertRow(); const j=jogadores[i];
       linha.insertCell().textContent=i+1;
