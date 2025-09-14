@@ -12,7 +12,27 @@
       margin-top: 40px;
     }
 
-    .ranking, .formulario {
+    .topo {
+      width: 750px;
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+    }
+
+    .btn-salvar {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .btn-salvar:hover {
+      background: #218838;
+    }
+
+    .ranking {
       background: #fff;
       padding: 20px;
       border-radius: 10px;
@@ -22,7 +42,7 @@
       position: relative;
     }
 
-    .ranking h2, .formulario h3 {
+    .ranking h2 {
       text-align: center;
       margin-bottom: 10px;
       color: #333;
@@ -70,20 +90,17 @@
     tr.pos9_17 td { background: #ffcccc; }
     tr.empty td { color: #aaa; }
 
-    tr { transition: all 0.5s ease; }
     tr:hover { background-color: #f1f1f1; }
+    td[contenteditable="true"] { background: #ffffcc; }
 
-    .fade-in { animation: fadeIn 0.6s ease; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-
-    .formulario input {
-      width: calc(100% - 20px); padding: 10px; margin-bottom: 10px;
-      border: 1px solid #ccc; border-radius: 5px; font-size: 14px;
-    }
-
-    .formulario button, .btn-pontos {
-      padding: 6px 12px; color: white; border: none; border-radius: 5px;
-      font-size: 14px; cursor: pointer; margin: 2px;
+    .btn-pontos {
+      padding: 6px 12px;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 14px;
+      cursor: pointer;
+      margin: 2px;
       transition: transform 0.2s, box-shadow 0.2s;
     }
 
@@ -93,25 +110,15 @@
     .btn-quarto { background: #FF9800; }
     .btn-quinto { background: #795548; }
     .btn-campeao { background: #FF5722; }
-
-    .btn-presenca:hover { background: #45a049; }
-    .btn-segundo:hover { background: #1976D2; }
-    .btn-terceiro:hover { background: #7B1FA2; }
-    .btn-quarto:hover { background: #FB8C00; }
-    .btn-quinto:hover { background: #5D4037; }
-    .btn-campeao:hover { background: #E64A19; }
-
-    .btn-pontos:active { transform: scale(1.2); box-shadow: 0 0 10px rgba(0,0,0,0.2); }
-    .formulario button:hover { background: #555; }
-
-    .animacao-pontos {
-      position: absolute; font-weight: bold; color: #ff0000;
-      animation: subirFade 1s forwards; pointer-events: none;
-    }
-    @keyframes subirFade { 0% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(-30px); } }
   </style>
 </head>
 <body>
+  <!-- Topo com botão salvar -->
+  <div class="topo">
+    <div><h3>📋 Controle do Ranking</h3></div>
+    <button class="btn-salvar" onclick="salvarRanking()">💾 Salvar Ranking</button>
+  </div>
+
   <!-- Legenda -->
   <div class="legenda">
     <div><span class="azul"></span> Classificados para a mesa final semestral</div>
@@ -142,8 +149,14 @@
       "Rafa Estefam", "Danton", "Koiti", "Fe Gregio", "Jorge"
     ];
 
-    // Cria a lista de jogadores com pontuação zerada
-    let jogadores = nomes.map(nome => ({ nome, pontos: 0, presencas: 0, vitorias: 0 }));
+    let jogadores = [];
+
+    // Carrega do localStorage ou cria zerado
+    if(localStorage.getItem("rankingJogadores")){
+      jogadores = JSON.parse(localStorage.getItem("rankingJogadores"));
+    } else {
+      jogadores = nomes.map(nome => ({ nome, pontos: 0, presencas: 0, vitorias: 0 }));
+    }
 
     function atualizarTabela() {
       const tabela = document.getElementById("rankingTable");
@@ -162,24 +175,38 @@
 
       for (let i = 0; i < 60; i++) {
         const linha = tabela.insertRow();
-        linha.classList.add("fade-in");
 
         if (i < jogadores.length) {
           const jogador = jogadores[i];
+
           linha.insertCell().textContent = i + 1;
           linha.insertCell().textContent = jogador.nome;
-          linha.insertCell().textContent = jogador.pontos;
-          linha.insertCell().textContent = jogador.presencas;
-          linha.insertCell().textContent = jogador.vitorias;
 
+          // Campos editáveis
+          let tdPontos = linha.insertCell();
+          tdPontos.textContent = jogador.pontos;
+          tdPontos.contentEditable = "true";
+          tdPontos.onblur = () => jogador.pontos = parseInt(tdPontos.textContent) || 0;
+
+          let tdPres = linha.insertCell();
+          tdPres.textContent = jogador.presencas;
+          tdPres.contentEditable = "true";
+          tdPres.onblur = () => jogador.presencas = parseInt(tdPres.textContent) || 0;
+
+          let tdVit = linha.insertCell();
+          tdVit.textContent = jogador.vitorias;
+          tdVit.contentEditable = "true";
+          tdVit.onblur = () => jogador.vitorias = parseInt(tdVit.textContent) || 0;
+
+          // Botões
           const celulaBotoes = linha.insertCell();
           [
             { valor: 10, nome: 'Presença', classe: 'btn-presenca', adicionaPresenca: true, adicionaVitoria: false },
-            { valor: 80, nome: 'Segundo', classe: 'btn-segundo', adicionaPresenca: false, adicionaVitoria: false },
-            { valor: 60, nome: 'Terceiro', classe: 'btn-terceiro', adicionaPresenca: false, adicionaVitoria: false },
-            { valor: 40, nome: 'Quarto', classe: 'btn-quarto', adicionaPresenca: false, adicionaVitoria: false },
-            { valor: 20, nome: 'Quinto', classe: 'btn-quinto', adicionaPresenca: false, adicionaVitoria: false },
-            { valor: 100, nome: 'Campeão', classe: 'btn-campeao', adicionaPresenca: false, adicionaVitoria: true }
+            { valor: 80, nome: 'Segundo', classe: 'btn-segundo' },
+            { valor: 60, nome: 'Terceiro', classe: 'btn-terceiro' },
+            { valor: 40, nome: 'Quarto', classe: 'btn-quarto' },
+            { valor: 20, nome: 'Quinto', classe: 'btn-quinto' },
+            { valor: 100, nome: 'Campeão', classe: 'btn-campeao', adicionaVitoria: true }
           ].forEach(item => {
             const btn = document.createElement("button");
             btn.textContent = item.nome;
@@ -188,7 +215,6 @@
               jogador.pontos += item.valor;
               if(item.adicionaPresenca) jogador.presencas += 1;
               if(item.adicionaVitoria) jogador.vitorias += 1;
-              mostrarAnimacao(linha, item.valor);
               atualizarTabela();
             };
             celulaBotoes.appendChild(btn);
@@ -209,12 +235,9 @@
       }
     }
 
-    function mostrarAnimacao(linha, valor) {
-      const anim = document.createElement("div");
-      anim.className = "animacao-pontos";
-      anim.textContent = `+${valor}`;
-      linha.cells[2].appendChild(anim);
-      setTimeout(() => anim.remove(), 1000);
+    function salvarRanking(){
+      localStorage.setItem("rankingJogadores", JSON.stringify(jogadores));
+      alert("✅ Ranking salvo com sucesso!");
     }
 
     atualizarTabela();
