@@ -11,7 +11,6 @@
     flex-direction: column;
     align-items: center;
     margin-top: 30px;
-    color: #000;
   }
 
   .topo {
@@ -37,7 +36,6 @@
 
   .ranking {
     background: linear-gradient(135deg, #3e2723 0%, #5d4037 25%, #d7ccc8 50%, #5d4037 75%, #3e2723 100%);
-    background-size: 200% 200%;
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
@@ -51,7 +49,7 @@
   .ranking h2 {
     text-align: center;
     margin-bottom: 15px;
-    color: #ffe082; /* cor clara para título */
+    color: #ffe082; /* título claro */
     text-transform: uppercase;
     font-weight: bold;
     font-size: 22px;
@@ -84,6 +82,8 @@
     border: 1px dashed #ffcc00;
   }
 
+  .botoes-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 3px; }
+
   .btn-pontos { 
     padding: 3px 8px; 
     color: white; 
@@ -91,7 +91,6 @@
     border-radius: 4px; 
     font-size: 12px; 
     cursor: pointer; 
-    margin: 1px; 
     display: inline-block;
   }
   .btn-presenca { background: #4CAF50; }
@@ -117,7 +116,6 @@
   #rankingExport {
     display: none;
     background: linear-gradient(135deg, #3e2723 0%, #5d4037 25%, #d7ccc8 50%, #5d4037 75%, #3e2723 100%);
-    background-size: 200% 200%;
     padding: 20px;
     border-radius: 15px;
     border: 3px solid #ffcc00;
@@ -133,7 +131,6 @@
   #rankingExport tr.pos1_8 td { background: #81d4fa; color: #000; }
   #rankingExport tr.pos9_17 td { background: #ff8a80; color: #000; }
 
-  .botoes-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 3px; }
 </style>
 </head>
 <body>
@@ -176,7 +173,6 @@
   </table>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 let nomes = [
   "Vitor Augusto","RacBatis","Briga","Jhow Jhow","Erick","Roque","Nono","Veinho","Rossi","Mario",
@@ -204,21 +200,20 @@ function atualizarTabela() {
     return b.pontos - a.pontos;
   });
 
-  for(let i=0;i<jogadores.length;i++){
+  jogadores.forEach((j,i)=>{
     const linha = tabela.insertRow();
-    const j = jogadores[i];
+    if(i<8) linha.classList.add("pos1_8");
+    else if(i<17) linha.classList.add("pos9_17");
 
     linha.insertCell().textContent = i+1;
-
     let tdNome = linha.insertCell(); tdNome.textContent = j.nome; tdNome.contentEditable="true"; tdNome.onblur=()=>j.nome=tdNome.textContent;
     let tdP = linha.insertCell(); tdP.textContent=j.pontos; tdP.contentEditable="true"; tdP.onblur=()=>j.pontos=parseInt(tdP.textContent)||0;
-    let tdPres = linha.insertCell(); tdPres.textContent=j.presencas; tdPres.contentEditable="true"; tdPres.onblur=()=>j.presencas=parseInt(tdPres.textContent)||0;
-    let tdVit = linha.insertCell(); tdVit.textContent=j.vitorias; tdVit.contentEditable="true"; tdVit.onblur=()=>j.vitorias=parseInt(tdVit.textContent)||0;
+    let tdPres=linha.insertCell(); tdPres.textContent=j.presencas; tdPres.contentEditable="true"; tdPres.onblur=()=>j.presencas=parseInt(tdPres.textContent)||0;
+    let tdVit=linha.insertCell(); tdVit.textContent=j.vitorias; tdVit.contentEditable="true"; tdVit.onblur=()=>j.vitorias=parseInt(tdVit.textContent)||0;
 
     const celulaBotoes = linha.insertCell();
-    const containerBotoes = document.createElement("div");
-    containerBotoes.className = "botoes-container";
-
+    const containerBtns = document.createElement("div");
+    containerBtns.className = "botoes-container";
     [
       { valor:10, nome:'Presença', classe:'btn-presenca', adicionaPresenca:true },
       { valor:80, nome:'Segundo', classe:'btn-segundo' },
@@ -234,17 +229,13 @@ function atualizarTabela() {
         j.pontos+=item.valor;
         if(item.adicionaPresenca) j.presencas+=1;
         if(item.adicionaVitoria) j.vitorias+=1;
-        mostrarAnimacao(tdP, item.valor);
+        mostrarAnimacao(tdP,item.valor);
         atualizarTabela();
       };
-      containerBotoes.appendChild(btn);
+      containerBtns.appendChild(btn);
     });
-
-    celulaBotoes.appendChild(containerBotoes);
-
-    if(i<8) linha.classList.add("pos1_8");
-    else if(i<17) linha.classList.add("pos9_17");
-  }
+    celulaBotoes.appendChild(containerBtns);
+  });
 }
 
 function mostrarAnimacao(celula, valor){
@@ -261,22 +252,20 @@ function atualizarTabelaExport() {
   tabela.innerHTML=`<tr><th>Posição</th><th>Nome</th><th>Pontos</th><th>Presenças</th><th>Vitórias</th></tr>`;
   const hoje = new Date();
   document.getElementById("exportTitulo").textContent=`🏆 Ranking Home Ras Poker 2025 - ${hoje.toLocaleDateString("pt-BR")}`;
-
   jogadores.sort((a,b)=>{
     if(b.vitorias!==a.vitorias) return b.vitorias-a.vitorias;
     if(b.presencas!==a.presencas) return b.presencas-a.presencas;
     return b.pontos-a.pontos;
   });
-
-  for(let i=0;i<jogadores.length;i++){
-    const linha=tabela.insertRow(); const j=jogadores[i];
+  jogadores.forEach((j,i)=>{
+    const linha=tabela.insertRow();
     linha.insertCell().textContent=i+1;
     linha.insertCell().textContent=j.nome;
     linha.insertCell().textContent=j.pontos;
     linha.insertCell().textContent=j.presencas;
     linha.insertCell().textContent=j.vitorias;
     if(i<8) linha.classList.add("pos1_8"); else if(i<17) linha.classList.add("pos9_17");
-  }
+  });
 }
 
 function salvarRanking(){ localStorage.setItem("rankingJogadores",JSON.stringify(jogadores)); alert("✅ Ranking salvo!"); }
