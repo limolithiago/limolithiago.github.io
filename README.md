@@ -49,7 +49,7 @@
     .ranking h2 {
       text-align: center;
       margin-bottom: 15px;
-      color: #222; /* escuro */
+      color: #222; /* título escuro */
       text-transform: uppercase;
       font-weight: bold;
       font-size: 22px;
@@ -84,13 +84,29 @@
       border: 1px dashed #ffcc00;
     }
 
-    .btn-pontos { padding: 3px 8px; color: white; border: none; border-radius: 4px; font-size: 12px; cursor: pointer; margin: 1px; }
+    /* Estilo dos botões de pontos */
+    .btn-pontos {
+      padding: 3px 8px;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+    }
     .btn-presenca { background: #4CAF50; }
     .btn-segundo { background: #2196F3; }
     .btn-terceiro { background: #9C27B0; }
     .btn-quarto { background: #FF9800; }
     .btn-quinto { background: #795548; }
     .btn-campeao { background: #FF5722; }
+
+    /* Alinhamento dos botões dentro da célula */
+    td:last-child {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
 
     .animacao-pontos {
       position: absolute;
@@ -122,8 +138,9 @@
       font-size: 20px;
       margin-bottom: 15px;
       font-weight: bold;
-      text-decoration: underline; /* sublinhado */
+      text-decoration: underline;
     }
+
     #rankingExport table { width: 100%; border-collapse: collapse; }
     #rankingExport th, #rankingExport td { padding: 6px; text-align: center; border: 1px solid #a1887f; color: #000; }
     #rankingExport th { background-color: #ffcc00; color: #000; }
