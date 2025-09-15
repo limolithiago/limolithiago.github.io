@@ -1,8 +1,7 @@
-# homeraspoker.github.io
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Ranking Home Ras Poker 2025</title>
+<title>Ranking Poker Piscine 2025</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
   body {
@@ -100,6 +99,10 @@
   .btn-quarto { background: #FF9800; }
   .btn-quinto { background: #795548; }
   .btn-campeao { background: #FF5722; }
+  .btn-sexto { background: #8BC34A; }
+  .btn-setimo { background: #00BCD4; }
+  .btn-oitavo { background: #FFC107; }
+  .btn-nono { background: #9E9E9E; }
 
   .animacao-pontos {
     position: absolute;
@@ -139,6 +142,7 @@
 <div class="topo">
   <button class="btn-salvar" onclick="salvarRanking()">💾 Salvar Ranking</button>
   <button class="btn-add" onclick="adicionarJogador()">➕ Adicionar Jogador</button>
+  <button class="btn-salvar" onclick="resetarConsumo()">♻️ Resetar Consumo</button>
   <button class="btn-exportar" onclick="exportarTabela()">📷 Exportar Tabela</button>
 </div>
 
@@ -148,7 +152,7 @@
 </div>
 
 <div class="ranking" id="rankingContainer">
-  <h2>🏆 Ranking Home Ras Poker 2025</h2>
+  <h2>🏆 Ranking Poker Piscine 2025</h2>
   <table id="rankingTable">
     <tr>
       <th>Posição</th>
@@ -162,7 +166,7 @@
 </div>
 
 <div class="ranking" id="rankingExport">
-  <h2 id="exportTitulo">🏆 Ranking Home Ras Poker 2025</h2>
+  <h2 id="exportTitulo">🏆 Ranking Poker Piscine 2025</h2>
   <table id="exportTable">
     <tr>
       <th>Posição</th>
@@ -175,20 +179,10 @@
 </div>
 
 <script>
-let nomes = [
-  "Vitor Augusto","RacBatis","Briga","Jhow Jhow","Erick","Roque","Nono","Veinho","Rossi","Mario",
-  "Piscine","Limoli","Gabriel Vieira","Brunno","Victor Costa","Brian","Caio","Pit","Ale","Zaca",
-  "Gui Farias","Leo Conde","Guido","Caio Japa","Chicão","Yoshida","Arrais","Lucas Chaves","Mnafred","Rangel",
-  "Samuel","Allan","Dilam","Espeto","Gustavo Alemão","Mateus Grand","Ricardo Cipolli","Pedro Jesus","Boss","Phillipe",
-  "William","Mata","Mariana","Ronaldão","David","Dede","Bezerra","Edson Arrais","Henrique","Pedro Bolívia",
-  "Rafa Estefam","Danton","Koiti","Fe Gregio","Jorge"
-];
+let jogadores = []; // começa vazio
 
-let jogadores = [];
 if(localStorage.getItem("rankingJogadores")){
   jogadores = JSON.parse(localStorage.getItem("rankingJogadores"));
-} else {
-  jogadores = nomes.map(nome => ({ nome, pontos: 0, presencas: 0, vitorias: 0 }));
 }
 
 function atualizarTabela() {
@@ -217,11 +211,15 @@ function atualizarTabela() {
     containerBtns.className = "botoes-container";
     [
       { valor:10, nome:'Presença', classe:'btn-presenca', adicionaPresenca:true },
-      { valor:80, nome:'Segundo', classe:'btn-segundo' },
-      { valor:60, nome:'Terceiro', classe:'btn-terceiro' },
-      { valor:40, nome:'Quarto', classe:'btn-quarto' },
-      { valor:20, nome:'Quinto', classe:'btn-quinto' },
-      { valor:100, nome:'Campeão', classe:'btn-campeao', adicionaVitoria:true }
+      { valor:250, nome:'Campeão', classe:'btn-campeao', adicionaVitoria:true },
+      { valor:150, nome:'Segundo', classe:'btn-segundo' },
+      { valor:100, nome:'Terceiro', classe:'btn-terceiro' },
+      { valor:70, nome:'Quarto', classe:'btn-quarto' },
+      { valor:50, nome:'Quinto', classe:'btn-quinto' },
+      { valor:40, nome:'Sexto', classe:'btn-sexto' },
+      { valor:30, nome:'Sétimo', classe:'btn-setimo' },
+      { valor:20, nome:'Oitavo', classe:'btn-oitavo' },
+      { valor:10, nome:'Nono', classe:'btn-nono' }
     ].forEach(item=>{
       const btn=document.createElement("button");
       btn.textContent=item.nome;
@@ -252,7 +250,7 @@ function atualizarTabelaExport() {
   const tabela = document.getElementById("exportTable");
   tabela.innerHTML=`<tr><th>Posição</th><th>Nome</th><th>Pontos</th><th>Presenças</th><th>Vitórias</th></tr>`;
   const hoje = new Date();
-  document.getElementById("exportTitulo").textContent=`🏆 Ranking Home Ras Poker 2025 - ${hoje.toLocaleDateString("pt-BR")}`;
+  document.getElementById("exportTitulo").textContent=`🏆 Ranking Poker Piscine 2025 - ${hoje.toLocaleDateString("pt-BR")}`;
   jogadores.sort((a,b)=>{
     if(b.vitorias!==a.vitorias) return b.vitorias-a.vitorias;
     if(b.presencas!==a.presencas) return b.presencas-a.presencas;
@@ -271,6 +269,18 @@ function atualizarTabelaExport() {
 
 function salvarRanking(){ localStorage.setItem("rankingJogadores",JSON.stringify(jogadores)); alert("✅ Ranking salvo!"); }
 function adicionarJogador(){ let nome=prompt("Digite o nome do novo jogador:"); if(nome&&nome.trim()!==""){ jogadores.push({nome:nome.trim(),pontos:0,presencas:0,vitorias:0}); atualizarTabela(); } }
+function resetarConsumo(){
+  if(confirm("Tem certeza que deseja resetar o consumo de todas as comandas? Os nomes serão mantidos.")){
+    jogadores.forEach(j=>{
+      j.pontos = 0;
+      j.presencas = 0;
+      j.vitorias = 0;
+    });
+    atualizarTabela();
+    salvarRanking();
+    alert("✅ Consumo resetado, nomes mantidos.");
+  }
+}
 
 function exportarTabela(){
   atualizarTabelaExport();
