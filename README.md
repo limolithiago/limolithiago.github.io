@@ -55,10 +55,28 @@
 
   .ranking h2 {
     text-align: center;
-    margin-bottom: 12px;
+    margin-bottom: 5px;
     color: #ffe082;
     text-transform: uppercase;
     font-size: 20px;
+  }
+
+  .data-atualizacao {
+    text-align: center;
+    font-size: 13px;
+    color: #000;
+    margin-bottom: 15px;
+    display: none;
+  }
+
+  .logo-certificado {
+    display: none;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  .logo-certificado img {
+    width: 80px;
+    height: 80px;
   }
 
   .legenda {
@@ -91,7 +109,6 @@
   }
 
   .botoes-container { display: flex; justify-content: center; flex-wrap: wrap; gap: 4px; }
-
   .btn-pontos { 
     padding: 4px 6px; 
     color: white; 
@@ -124,6 +141,51 @@
     0% { opacity: 1; transform: translateY(0); }
     100% { opacity: 0; transform: translateY(-25px); }
   }
+
+  /* --- Estilo especial para exportação (certificado) --- */
+  .export-mode {
+    background: #fff !important;
+    border: 6px solid #ffcc00 !important;
+    border-radius: 20px;
+    padding: 25px !important;
+    box-shadow: 0 0 25px rgba(0,0,0,0.3);
+  }
+  .export-mode td.acoes, 
+  .export-mode th.acoes { 
+    display: none !important; 
+  }
+  .export-mode .logo-certificado {
+    display: block !important;
+  }
+  .export-mode h2 {
+    font-size: 26px !important;
+    font-weight: bold;
+    color: #3e2723 !important;
+    text-align: center;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+  .export-mode .data-atualizacao {
+    display: block !important;
+    font-size: 12px;
+    font-style: italic;
+    color: #444;
+  }
+  .export-mode table {
+    border: 2px solid #3e2723;
+    border-radius: 10px;
+    background: #fff !important;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  .export-mode th {
+    background: #ffcc00 !important;
+    color: #000 !important;
+    font-size: 14px;
+  }
+  .export-mode td {
+    font-size: 13px;
+    padding: 8px;
+  }
 </style>
 </head>
 <body>
@@ -141,7 +203,11 @@
 </div>
 
 <div class="ranking" id="rankingContainer">
+  <div class="logo-certificado">
+    <img src="https://cdn-icons-png.flaticon.com/512/616/616490.png" alt="Logo Poker">
+  </div>
   <h2>🏆 Ranking Poker Piscine 2025</h2>
+  <div class="data-atualizacao" id="dataExportacao"></div>
   <table id="rankingTable">
     <tr>
       <th>Posição</th>
@@ -149,7 +215,7 @@
       <th>Pontos</th>
       <th>Presenças</th>
       <th>Vitórias</th>
-      <th>Ações</th>
+      <th class="acoes">Ações</th>
     </tr>
   </table>
 </div>
@@ -169,7 +235,7 @@ function atualizarTabela() {
     <th>Pontos</th>
     <th>Presenças</th>
     <th>Vitórias</th>
-    <th>Ações</th>
+    <th class="acoes">Ações</th>
   </tr>`;
 
   jogadores.sort((a,b) => {
@@ -205,6 +271,7 @@ function atualizarTabela() {
     tdVit.onblur=()=>j.vitorias=parseInt(tdVit.textContent)||0;
 
     const celulaAcoes = linha.insertCell();
+    celulaAcoes.className="acoes";
     const containerBtns = document.createElement("div");
     containerBtns.className = "botoes-container";
 
@@ -233,7 +300,6 @@ function atualizarTabela() {
       containerBtns.appendChild(btn);
     });
 
-    // Botão de excluir jogador
     const btnExcluir=document.createElement("button");
     btnExcluir.textContent="🗑 Excluir";
     btnExcluir.className="btn-excluir";
@@ -273,11 +339,17 @@ function adicionarJogador(){
 
 function exportarTabela(){
   const container=document.getElementById("rankingContainer");
+  const data=document.getElementById("dataExportacao");
+  const agora=new Date();
+  data.textContent="Atualizado em: "+agora.toLocaleDateString("pt-BR")+" às "+agora.toLocaleTimeString("pt-BR");
+  container.classList.add("export-mode"); 
   html2canvas(container).then(canvas=>{
     const link=document.createElement("a");
     link.download="ranking.png";
     link.href=canvas.toDataURL();
     link.click();
+    container.classList.remove("export-mode"); 
+    data.textContent=""; 
   });
 }
 
