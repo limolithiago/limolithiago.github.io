@@ -21,7 +21,7 @@
     gap: 10px;
   }
 
-  .btn-salvar, .btn-add, .btn-exportar {
+  .btn-salvar, .btn-add, .btn-exportar, .btn-atualizar {
     background: #ffcc00;
     color: #3e2723;
     border: none;
@@ -32,7 +32,7 @@
     font-weight: bold;
     box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
   }
-  .btn-salvar:hover, .btn-add:hover, .btn-exportar:hover { background: #ffb300; }
+  .btn-salvar:hover, .btn-add:hover, .btn-exportar:hover, .btn-atualizar:hover { background: #ffb300; }
 
   .ranking {
     background: linear-gradient(135deg, #3e2723 0%, #5d4037 25%, #d7ccc8 50%, #5d4037 75%, #3e2723 100%);
@@ -49,7 +49,7 @@
   .ranking h2 {
     text-align: center;
     margin-bottom: 15px;
-    color: #ffe082; /* título claro */
+    color: #ffe082;
     text-transform: uppercase;
     font-weight: bold;
     font-size: 22px;
@@ -134,7 +134,6 @@
   #rankingExport th { background-color: #ffcc00; color: #000; }
   #rankingExport tr.pos1_8 td { background: #81d4fa; color: #000; }
   #rankingExport tr.pos9_17 td { background: #ff8a80; color: #000; }
-
 </style>
 </head>
 <body>
@@ -142,7 +141,7 @@
 <div class="topo">
   <button class="btn-salvar" onclick="salvarRanking()">💾 Salvar Ranking</button>
   <button class="btn-add" onclick="adicionarJogador()">➕ Adicionar Jogador</button>
-  <button class="btn-salvar" onclick="resetarConsumo()">♻️ Resetar Consumo</button>
+  <button class="btn-atualizar" onclick="atualizarTabela()">🔄 Atualizar Tabela</button>
   <button class="btn-exportar" onclick="exportarTabela()">📷 Exportar Tabela</button>
 </div>
 
@@ -179,7 +178,7 @@
 </div>
 
 <script>
-let jogadores = []; // começa vazio
+let jogadores = []; 
 
 if(localStorage.getItem("rankingJogadores")){
   jogadores = JSON.parse(localStorage.getItem("rankingJogadores"));
@@ -269,18 +268,6 @@ function atualizarTabelaExport() {
 
 function salvarRanking(){ localStorage.setItem("rankingJogadores",JSON.stringify(jogadores)); alert("✅ Ranking salvo!"); }
 function adicionarJogador(){ let nome=prompt("Digite o nome do novo jogador:"); if(nome&&nome.trim()!==""){ jogadores.push({nome:nome.trim(),pontos:0,presencas:0,vitorias:0}); atualizarTabela(); } }
-function resetarConsumo(){
-  if(confirm("Tem certeza que deseja resetar o consumo de todas as comandas? Os nomes serão mantidos.")){
-    jogadores.forEach(j=>{
-      j.pontos = 0;
-      j.presencas = 0;
-      j.vitorias = 0;
-    });
-    atualizarTabela();
-    salvarRanking();
-    alert("✅ Consumo resetado, nomes mantidos.");
-  }
-}
 
 function exportarTabela(){
   atualizarTabelaExport();
