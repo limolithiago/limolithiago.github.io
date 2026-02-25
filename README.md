@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Ranking Home Ras 2026</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
@@ -41,6 +42,31 @@
     box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
   }
   .btn:hover { background: #ffb300; }
+
+  .status {
+    width: 100%;
+    max-width: 750px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid #ddd;
+    background: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    font-size: 12px;
+    color: #333;
+  }
+  .pill {
+    padding: 4px 8px;
+    border-radius: 999px;
+    border: 1px solid #ddd;
+    background: #fafafa;
+    font-weight: bold;
+    white-space: nowrap;
+  }
 
   /* Caixa de inscritos */
   .inscritos {
@@ -196,7 +222,7 @@
     padding: 25px !important;
     box-shadow: 0 0 25px rgba(0,0,0,0.3);
   }
-  .export-mode td.acoes, 
+  .export-mode td.acoes,
   .export-mode th.acoes { display: none !important; }
   .export-mode .logo-certificado { display: block !important; }
   .export-mode h2 {
@@ -234,10 +260,15 @@
 <body>
 
 <div class="topo">
-  <button class="btn" onclick="salvarTudo()">💾 Salvar</button>
-  <button class="btn" onclick="adicionarJogador()">➕ Adicionar Jogador</button>
-  <button class="btn" onclick="atualizarTudo()">🔄 Atualizar</button>
-  <button class="btn" onclick="exportarTabela()">📷 Exportar Tabela</button>
+  <button class="btn" id="btnSalvar">💾 Salvar</button>
+  <button class="btn" id="btnAdicionar">➕ Adicionar Jogador</button>
+  <button class="btn" id="btnAtualizar">🔄 Atualizar</button>
+  <button class="btn" id="btnExportar">📷 Exportar Tabela</button>
+</div>
+
+<div class="status">
+  <div class="pill" id="pillCloud">☁️ Cloud: conectando...</div>
+  <div class="pill" id="pillSync">🔄 Sync: aguardando...</div>
 </div>
 
 <!-- Lista de inscritos (separada) -->
@@ -279,388 +310,482 @@
   </table>
 </div>
 
-<script>
-/**
- * Agora existem duas listas:
- * - listaJogadores: inscritos (podem ter 0 pontos e não aparecem no ranking)
- * - rankingJogadores: só quem já pontuou (pontos > 0 ou presenças/vitórias > 0)
- */
-let listaJogadores = [];
-let rankingJogadores = [];
+<!-- Firebase + App -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, onSnapshot, serverTimestamp, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
+  import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
 
-const LS_LISTA = "listaJogadores_homeRas";
-const LS_RANKING = "rankingJogadores_homeRas";
+  // =========================
+  //  FIREBASE CONFIG (seu)
+  // =========================
+  const firebaseConfig = {
+    apiKey: "AIzaSyDRXzchvZ6Iafb97iLQoxenjJos5U0fBhY",
+    authDomain: "ranking-home-ras-2026.firebaseapp.com",
+    projectId: "ranking-home-ras-2026",
+    storageBucket: "ranking-home-ras-2026.firebasestorage.app",
+    messagingSenderId: "746061305811",
+    appId: "1:746061305811:web:c4e20aa19e622879ec8126",
+    measurementId: "G-BH5DG8365L"
+  };
 
-/* ---------- Carregar do localStorage ---------- */
-(function carregar(){
-  const l = localStorage.getItem(LS_LISTA);
-  const r = localStorage.getItem(LS_RANKING);
-  if(l) listaJogadores = JSON.parse(l);
-  if(r) rankingJogadores = JSON.parse(r);
+  // Documento único do ranking (você pode trocar o ID se quiser ter mais de um ranking)
+  const DOC_PATH = { col: "rankings", id: "homeRas2026" };
 
-  // Se alguém veio do seu código antigo, tenta migrar:
-  // (rankingJogadores antigo -> rankingJogadores novo)
-  const antigo = localStorage.getItem("rankingJogadores");
-  if(!r && antigo){
-    try{
-      rankingJogadores = JSON.parse(antigo) || [];
-    }catch(e){}
+  // =========================
+  //  STATE
+  // =========================
+  let listaJogadores = [];
+  let rankingJogadores = [];
+
+  const pillCloud = document.getElementById("pillCloud");
+  const pillSync = document.getElementById("pillSync");
+
+  // Evita loop: quando receber update da nuvem, não re-salvar imediatamente
+  let applyingRemote = false;
+
+  // Debounce do autosave
+  let saveTimer = null;
+
+  // =========================
+  //  FIREBASE INIT
+  // =========================
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  // Persistência offline (Firestore guarda cache local e sincroniza quando voltar)
+  // Obs: isso NÃO substitui a nuvem; é só um bônus pra funcionar sem internet.
+  try {
+    await enableIndexedDbPersistence(db);
+  } catch (e) {
+    // Pode falhar em alguns cenários (ex.: múltiplas abas abertas)
   }
 
-  // Garantir campos
-  listaJogadores.forEach(normalizarJogador);
-  rankingJogadores.forEach(normalizarJogador);
+  // Login anônimo (recomendo ter Rules exigindo auth != null)
+  try {
+    await signInAnonymously(auth);
+  } catch (e) {
+    pillCloud.textContent = "☁️ Cloud: erro no login";
+    console.error(e);
+  }
 
-  // Evitar duplicados pelo nome (caso migração):
-  deduplicarPorNome(listaJogadores);
-  deduplicarPorNome(rankingJogadores);
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      pillCloud.textContent = "☁️ Cloud: conectado";
+    } else {
+      pillCloud.textContent = "☁️ Cloud: desconectado";
+    }
+  });
 
-  // Se alguém no ranking tiver pontos=0 e tudo 0, manda pra lista
-  rankingJogadores = rankingJogadores.filter(j=>{
+  const rankingRef = doc(db, DOC_PATH.col, DOC_PATH.id);
+
+  // =========================
+  //  HELPERS
+  // =========================
+  function normalizarJogador(j){
+    j.nome = (j.nome ?? "").toString().trim();
+    j.pontos = parseInt(j.pontos) || 0;
+    j.presencas = parseInt(j.presencas) || 0;
+    j.vitorias = parseInt(j.vitorias) || 0;
+  }
+
+  function chaveNome(nome){
+    return (nome || "").toString().trim().toLowerCase();
+  }
+
+  function inserirSeNaoExiste(arr, jogador){
+    const key = chaveNome(jogador.nome);
+    if(!key) return;
+    if(arr.some(x => chaveNome(x.nome) === key)) return;
+    arr.push({
+      nome: jogador.nome.trim(),
+      pontos: jogador.pontos || 0,
+      presencas: jogador.presencas || 0,
+      vitorias: jogador.vitorias || 0
+    });
+  }
+
+  function removerPorNome(arr, nome){
+    const key = chaveNome(nome);
+    const idx = arr.findIndex(x => chaveNome(x.nome) === key);
+    if(idx >= 0) arr.splice(idx, 1);
+  }
+
+  function deduplicarPorNome(arr){
+    const seen = new Set();
+    for(let i = arr.length - 1; i >= 0; i--){
+      const k = chaveNome(arr[i].nome);
+      if(!k || seen.has(k)) arr.splice(i, 1);
+      else seen.add(k);
+    }
+  }
+
+  function marcarComoAtivo(j){
+    removerPorNome(listaJogadores, j.nome);
+    inserirSeNaoExiste(rankingJogadores, j);
+  }
+
+  function talvezRetornarParaLista(j){
     const ativo = (j.pontos||0) > 0 || (j.presencas||0) > 0 || (j.vitorias||0) > 0;
     if(!ativo){
-      inserirSeNaoExiste(listaJogadores, j);
-      return false;
-    }
-    return true;
-  });
-
-  atualizarTudo();
-})();
-
-function normalizarJogador(j){
-  j.nome = (j.nome ?? "").toString().trim();
-  j.pontos = parseInt(j.pontos) || 0;
-  j.presencas = parseInt(j.presencas) || 0;
-  j.vitorias = parseInt(j.vitorias) || 0;
-}
-
-function chaveNome(nome){
-  return (nome || "").toString().trim().toLowerCase();
-}
-
-function inserirSeNaoExiste(arr, jogador){
-  const key = chaveNome(jogador.nome);
-  if(!key) return;
-  if(arr.some(x => chaveNome(x.nome) === key)) return;
-  arr.push({ nome: jogador.nome.trim(), pontos: jogador.pontos||0, presencas: jogador.presencas||0, vitorias: jogador.vitorias||0 });
-}
-
-function removerPorNome(arr, nome){
-  const key = chaveNome(nome);
-  const idx = arr.findIndex(x => chaveNome(x.nome) === key);
-  if(idx >= 0) arr.splice(idx, 1);
-}
-
-function deduplicarPorNome(arr){
-  const seen = new Set();
-  for(let i = arr.length - 1; i >= 0; i--){
-    const k = chaveNome(arr[i].nome);
-    if(!k || seen.has(k)) arr.splice(i, 1);
-    else seen.add(k);
-  }
-}
-
-/* ---------- Salvar ---------- */
-function salvarTudo(){
-  localStorage.setItem(LS_LISTA, JSON.stringify(listaJogadores));
-  localStorage.setItem(LS_RANKING, JSON.stringify(rankingJogadores));
-  alert("✅ Dados salvos!");
-}
-
-/* ---------- Atualizações de tela ---------- */
-function atualizarTudo(){
-  atualizarListaInscritos();
-  atualizarTabelaRanking();
-}
-
-/* ---------- Adicionar jogador (vai para lista) ---------- */
-function adicionarJogador(){
-  let nome = prompt("Digite o nome do novo jogador:");
-  if(nome && nome.trim() !== ""){
-    const novo = { nome: nome.trim(), pontos: 0, presencas: 0, vitorias: 0 };
-    // não deixar duplicar entre lista e ranking
-    if(chaveNome(novo.nome)){
-      if(listaJogadores.some(j => chaveNome(j.nome) === chaveNome(novo.nome)) ||
-         rankingJogadores.some(j => chaveNome(j.nome) === chaveNome(novo.nome))){
-        alert("⚠️ Já existe um jogador com esse nome.");
-        return;
-      }
-      listaJogadores.push(novo);
-      atualizarListaInscritos();
-    }
-  }
-}
-
-/* ---------- Regras de “entrou no ranking” ---------- */
-function marcarComoAtivo(j){
-  // Remove da lista e coloca no ranking (preservando dados)
-  removerPorNome(listaJogadores, j.nome);
-  inserirSeNaoExiste(rankingJogadores, j);
-}
-
-function talvezRetornarParaLista(j){
-  const ativo = (j.pontos||0) > 0 || (j.presencas||0) > 0 || (j.vitorias||0) > 0;
-  if(!ativo){
-    removerPorNome(rankingJogadores, j.nome);
-    inserirSeNaoExiste(listaJogadores, j);
-  }
-}
-
-/* ---------- Botões de pontuação (reutilizável) ---------- */
-const PONTOS = [
-  { valor:10, nome:'Presença', classe:'btn-presenca', adicionaPresenca:true },
-  { valor:250, nome:'Campeão', classe:'btn-campeao', adicionaVitoria:true },
-  { valor:150, nome:'Segundo', classe:'btn-segundo' },
-  { valor:100, nome:'Terceiro', classe:'btn-terceiro' },
-  { valor:70, nome:'Quarto', classe:'btn-quarto' },
-  { valor:50, nome:'Quinto', classe:'btn-quinto' },
-  { valor:40, nome:'Sexto', classe:'btn-sexto' },
-  { valor:30, nome:'Sétimo', classe:'btn-setimo' },
-  { valor:20, nome:'Oitavo', classe:'btn-oitavo' },
-  { valor:10, nome:'Nono', classe:'btn-nono' }
-];
-
-function criarBotoesPontuacao(j, tdParaAnimacao, onDepois){
-  const containerBtns = document.createElement("div");
-  containerBtns.className = "botoes-container";
-
-  PONTOS.forEach(item=>{
-    const btn = document.createElement("button");
-    btn.textContent = item.nome;
-    btn.className = `btn-pontos ${item.classe}`;
-    btn.onclick = ()=>{
-      // se pontuou pela primeira vez: entra no ranking
-      if(!rankingJogadores.some(x => chaveNome(x.nome) === chaveNome(j.nome))){
-        marcarComoAtivo(j);
-        // Agora pega a referência do objeto dentro do ranking (garante que pontuaremos no correto)
-        j = rankingJogadores.find(x => chaveNome(x.nome) === chaveNome(j.nome)) || j;
-      }
-
-      j.pontos = (j.pontos||0) + item.valor;
-      if(item.adicionaPresenca) j.presencas = (j.presencas||0) + 1;
-      if(item.adicionaVitoria) j.vitorias = (j.vitorias||0) + 1;
-
-      if(tdParaAnimacao) mostrarAnimacao(tdParaAnimacao, item.valor);
-      if(typeof onDepois === "function") onDepois();
-      atualizarTudo();
-    };
-    containerBtns.appendChild(btn);
-  });
-
-  const btnExcluir = document.createElement("button");
-  btnExcluir.textContent = "🗑 Excluir";
-  btnExcluir.className = "btn-excluir";
-  btnExcluir.onclick = ()=>{
-    if(confirm(`Deseja realmente excluir o jogador "${j.nome}"?`)){
-      removerPorNome(listaJogadores, j.nome);
       removerPorNome(rankingJogadores, j.nome);
-      atualizarTudo();
+      inserirSeNaoExiste(listaJogadores, j);
     }
-  };
-  containerBtns.appendChild(btnExcluir);
-
-  return containerBtns;
-}
-
-function mostrarAnimacao(celula, valor){
-  const anim = document.createElement("div");
-  anim.className = "animacao-pontos";
-  anim.textContent = `+${valor}`;
-  celula.style.position = "relative";
-  celula.appendChild(anim);
-  setTimeout(()=> anim.remove(), 1000);
-}
-
-/* ---------- Tabela: Lista de inscritos ---------- */
-function atualizarListaInscritos(){
-  const tabela = document.getElementById("listaTable");
-  tabela.innerHTML = `<tr>
-    <th>Nome</th>
-    <th>Pontos</th>
-    <th>Presenças</th>
-    <th>Vitórias</th>
-    <th class="acoes">Ações</th>
-  </tr>`;
-
-  // Ordena só por nome para ficar “lista”
-  const copia = [...listaJogadores].sort((a,b)=> a.nome.localeCompare(b.nome, "pt-BR", { sensitivity:"base" }));
-
-  if(copia.length === 0){
-    const linha = tabela.insertRow();
-    linha.classList.add("empty");
-    const td = linha.insertCell();
-    td.colSpan = 5;
-    td.textContent = "Nenhum jogador na lista. Clique em “Adicionar Jogador”.";
-    return;
   }
 
-  copia.forEach(j=>{
-    const linha = tabela.insertRow();
-
-    // Nome editável na lista
-    const tdNome = linha.insertCell();
-    tdNome.textContent = j.nome;
-    tdNome.contentEditable = "true";
-    tdNome.onblur = ()=>{
-      const novoNome = tdNome.textContent.trim();
-      if(!novoNome){
-        tdNome.textContent = j.nome;
-        return;
-      }
-      // não permitir colidir com alguém existente (fora ele)
-      const keyNovo = chaveNome(novoNome);
-      const keyAtual = chaveNome(j.nome);
-      const existeEmOutro =
-        listaJogadores.some(x => chaveNome(x.nome) === keyNovo && chaveNome(x.nome) !== keyAtual) ||
-        rankingJogadores.some(x => chaveNome(x.nome) === keyNovo);
-
-      if(existeEmOutro){
-        alert("⚠️ Já existe um jogador com esse nome.");
-        tdNome.textContent = j.nome;
-        return;
-      }
-
-      j.nome = novoNome;
-      atualizarTudo();
-    };
-
-    // Colunas “preview” (sem edição aqui)
-    linha.insertCell().textContent = j.pontos || 0;
-    linha.insertCell().textContent = j.presencas || 0;
-    linha.insertCell().textContent = j.vitorias || 0;
-
-    const tdAcoes = linha.insertCell();
-    tdAcoes.className = "acoes";
-
-    // Botões pontuam e mandam pro ranking
-    const tdAnim = linha.cells[1]; // animação em "Pontos"
-    tdAcoes.appendChild(criarBotoesPontuacao(j, tdAnim));
-  });
-}
-
-/* ---------- Tabela: Ranking (somente ativos) ---------- */
-function atualizarTabelaRanking(){
-  const tabela = document.getElementById("rankingTable");
-  tabela.innerHTML = `<tr>
-    <th>Posição</th>
-    <th>Nome</th>
-    <th>Pontos</th>
-    <th>Presenças</th>
-    <th>Vitórias</th>
-    <th class="acoes">Ações</th>
-  </tr>`;
-
-  // só quem “pontuou” (por regra: qualquer métrica > 0)
-  const ativos = rankingJogadores.filter(j =>
-    (j.pontos||0) > 0 || (j.presencas||0) > 0 || (j.vitorias||0) > 0
-  );
-
-  // mantém o array rankingJogadores coerente
-  rankingJogadores = ativos;
-  deduplicarPorNome(rankingJogadores);
-
-  if(rankingJogadores.length === 0){
-    const linha = tabela.insertRow();
-    linha.classList.add("empty");
-    const td = linha.insertCell();
-    td.colSpan = 6;
-    td.textContent = "Ainda não há pontuação. Pontue um inscrito para ele entrar no ranking.";
-    return;
+  function mostrarAnimacao(celula, valor){
+    const anim = document.createElement("div");
+    anim.className = "animacao-pontos";
+    anim.textContent = `+${valor}`;
+    celula.style.position = "relative";
+    celula.appendChild(anim);
+    setTimeout(()=> anim.remove(), 1000);
   }
 
-  rankingJogadores.sort((a,b) => {
-    if((b.pontos||0) !== (a.pontos||0)) return (b.pontos||0) - (a.pontos||0);
-    if((b.vitorias||0) !== (a.vitorias||0)) return (b.vitorias||0) - (a.vitorias||0);
-    return (b.presencas||0) - (a.presencas||0);
-  });
+  // =========================
+  //  FIRESTORE SYNC
+  // =========================
+  function scheduleSave(reason = "update"){
+    if (applyingRemote) return;
+    pillSync.textContent = "🔄 Sync: alterações pendentes...";
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(async () => {
+      await salvarNaNuvem(reason);
+    }, 350);
+  }
 
-  rankingJogadores.forEach((j,i)=>{
-    const linha = tabela.insertRow();
-    if(i < 8) linha.classList.add("pos1_8");
-    else if(i < 17) linha.classList.add("pos9_17");
+  async function salvarNaNuvem(reason = "manual"){
+    if (applyingRemote) return;
+    try {
+      // Normaliza antes de salvar
+      listaJogadores.forEach(normalizarJogador);
+      rankingJogadores.forEach(normalizarJogador);
 
-    linha.insertCell().textContent = i+1;
+      await setDoc(rankingRef, {
+        listaJogadores,
+        rankingJogadores,
+        updatedAt: serverTimestamp(),
+        updatedReason: reason
+      }, { merge: true });
 
-    // Nome editável
-    let tdNome = linha.insertCell();
-    tdNome.textContent = j.nome;
-    tdNome.contentEditable = "true";
-    tdNome.onblur = ()=>{
-      const novoNome = tdNome.textContent.trim();
-      if(!novoNome){
-        tdNome.textContent = j.nome;
-        return;
+      pillSync.textContent = "✅ Sync: salvo na nuvem";
+    } catch (e) {
+      pillSync.textContent = "⚠️ Sync: erro ao salvar";
+      console.error(e);
+    }
+  }
+
+  // Ouve mudanças da nuvem (tempo real)
+  onSnapshot(rankingRef, (snap) => {
+    if (!snap.exists()) {
+      // Se não existe ainda, cria vazio (primeira vez)
+      // Não forçamos salvar aqui, só inicializamos UI.
+      atualizarTudo();
+      pillSync.textContent = "🔄 Sync: documento novo (vazio)";
+      return;
+    }
+
+    const data = snap.data() || {};
+    applyingRemote = true;
+
+    listaJogadores = Array.isArray(data.listaJogadores) ? data.listaJogadores : [];
+    rankingJogadores = Array.isArray(data.rankingJogadores) ? data.rankingJogadores : [];
+
+    listaJogadores.forEach(normalizarJogador);
+    rankingJogadores.forEach(normalizarJogador);
+
+    deduplicarPorNome(listaJogadores);
+    deduplicarPorNome(rankingJogadores);
+
+    // Se no ranking tiver gente zerada, manda pra lista
+    rankingJogadores = rankingJogadores.filter(j=>{
+      const ativo = (j.pontos||0) > 0 || (j.presencas||0) > 0 || (j.vitorias||0) > 0;
+      if(!ativo){
+        inserirSeNaoExiste(listaJogadores, j);
+        return false;
       }
-      const keyNovo = chaveNome(novoNome);
-      const keyAtual = chaveNome(j.nome);
-      const colisao =
-        rankingJogadores.some(x => chaveNome(x.nome) === keyNovo && chaveNome(x.nome) !== keyAtual) ||
-        listaJogadores.some(x => chaveNome(x.nome) === keyNovo);
+      return true;
+    });
 
-      if(colisao){
-        alert("⚠️ Já existe um jogador com esse nome.");
-        tdNome.textContent = j.nome;
-        return;
+    atualizarTudo();
+    applyingRemote = false;
+
+    pillSync.textContent = "🔄 Sync: atualizado da nuvem";
+  });
+
+  // =========================
+  //  UI / TABLES
+  // =========================
+  const PONTOS = [
+    { valor:10, nome:'Presença', classe:'btn-presenca', adicionaPresenca:true },
+    { valor:250, nome:'Campeão', classe:'btn-campeao', adicionaVitoria:true },
+    { valor:150, nome:'Segundo', classe:'btn-segundo' },
+    { valor:100, nome:'Terceiro', classe:'btn-terceiro' },
+    { valor:70, nome:'Quarto', classe:'btn-quarto' },
+    { valor:50, nome:'Quinto', classe:'btn-quinto' },
+    { valor:40, nome:'Sexto', classe:'btn-sexto' },
+    { valor:30, nome:'Sétimo', classe:'btn-setimo' },
+    { valor:20, nome:'Oitavo', classe:'btn-oitavo' },
+    { valor:10, nome:'Nono', classe:'btn-nono' }
+  ];
+
+  function criarBotoesPontuacao(j, tdParaAnimacao){
+    const containerBtns = document.createElement("div");
+    containerBtns.className = "botoes-container";
+
+    PONTOS.forEach(item=>{
+      const btn = document.createElement("button");
+      btn.textContent = item.nome;
+      btn.className = `btn-pontos ${item.classe}`;
+      btn.onclick = ()=>{
+        // se pontuou pela primeira vez: entra no ranking
+        if(!rankingJogadores.some(x => chaveNome(x.nome) === chaveNome(j.nome))){
+          marcarComoAtivo(j);
+          j = rankingJogadores.find(x => chaveNome(x.nome) === chaveNome(j.nome)) || j;
+        }
+
+        j.pontos = (j.pontos||0) + item.valor;
+        if(item.adicionaPresenca) j.presencas = (j.presencas||0) + 1;
+        if(item.adicionaVitoria) j.vitorias = (j.vitorias||0) + 1;
+
+        if(tdParaAnimacao) mostrarAnimacao(tdParaAnimacao, item.valor);
+
+        atualizarTudo();
+        scheduleSave("pontuacao");
+      };
+      containerBtns.appendChild(btn);
+    });
+
+    const btnExcluir = document.createElement("button");
+    btnExcluir.textContent = "🗑 Excluir";
+    btnExcluir.className = "btn-excluir";
+    btnExcluir.onclick = ()=>{
+      if(confirm(`Deseja realmente excluir o jogador "${j.nome}"?`)){
+        removerPorNome(listaJogadores, j.nome);
+        removerPorNome(rankingJogadores, j.nome);
+        atualizarTudo();
+        scheduleSave("excluir");
       }
-      j.nome = novoNome;
-      atualizarTudo();
     };
+    containerBtns.appendChild(btnExcluir);
 
-    // Pontos editável (se zerar tudo, volta pra lista)
-    let tdP = linha.insertCell();
-    tdP.textContent = j.pontos || 0;
-    tdP.contentEditable = "true";
-    tdP.onblur = ()=>{
-      j.pontos = parseInt(tdP.textContent) || 0;
-      talvezRetornarParaLista(j);
-      atualizarTudo();
-    };
+    return containerBtns;
+  }
 
-    let tdPres = linha.insertCell();
-    tdPres.textContent = j.presencas || 0;
-    tdPres.contentEditable = "true";
-    tdPres.onblur = ()=>{
-      j.presencas = parseInt(tdPres.textContent) || 0;
-      talvezRetornarParaLista(j);
-      atualizarTudo();
-    };
+  function atualizarTudo(){
+    atualizarListaInscritos();
+    atualizarTabelaRanking();
+  }
 
-    let tdVit = linha.insertCell();
-    tdVit.textContent = j.vitorias || 0;
-    tdVit.contentEditable = "true";
-    tdVit.onblur = ()=>{
-      j.vitorias = parseInt(tdVit.textContent) || 0;
-      talvezRetornarParaLista(j);
-      atualizarTudo();
-    };
+  function adicionarJogador(){
+    let nome = prompt("Digite o nome do novo jogador:");
+    if(nome && nome.trim() !== ""){
+      const novo = { nome: nome.trim(), pontos: 0, presencas: 0, vitorias: 0 };
+      if(chaveNome(novo.nome)){
+        if(listaJogadores.some(j => chaveNome(j.nome) === chaveNome(novo.nome)) ||
+           rankingJogadores.some(j => chaveNome(j.nome) === chaveNome(novo.nome))){
+          alert("⚠️ Já existe um jogador com esse nome.");
+          return;
+        }
+        listaJogadores.push(novo);
+        atualizarTudo();
+        scheduleSave("adicionar_jogador");
+      }
+    }
+  }
 
-    const celulaAcoes = linha.insertCell();
-    celulaAcoes.className = "acoes";
+  function atualizarListaInscritos(){
+    const tabela = document.getElementById("listaTable");
+    tabela.innerHTML = `<tr>
+      <th>Nome</th>
+      <th>Pontos</th>
+      <th>Presenças</th>
+      <th>Vitórias</th>
+      <th class="acoes">Ações</th>
+    </tr>`;
 
-    // Botões pontuam normalmente
-    celulaAcoes.appendChild(criarBotoesPontuacao(j, tdP));
-  });
-}
+    const copia = [...listaJogadores].sort((a,b)=> a.nome.localeCompare(b.nome, "pt-BR", { sensitivity:"base" }));
 
-/* ---------- Exportar ---------- */
-function exportarTabela(){
-  const container = document.getElementById("rankingContainer");
-  const data = document.getElementById("dataExportacao");
-  const agora = new Date();
-  data.textContent = "Atualizado em: " + agora.toLocaleDateString("pt-BR") + " às " + agora.toLocaleTimeString("pt-BR");
+    if(copia.length === 0){
+      const linha = tabela.insertRow();
+      linha.classList.add("empty");
+      const td = linha.insertCell();
+      td.colSpan = 5;
+      td.textContent = "Nenhum jogador na lista. Clique em “Adicionar Jogador”.";
+      return;
+    }
 
-  container.classList.add("export-mode");
-  html2canvas(container).then(canvas=>{
-    const link = document.createElement("a");
-    link.download = "ranking_home_ras_2026.png";
-    link.href = canvas.toDataURL();
-    link.click();
+    copia.forEach(j=>{
+      const linha = tabela.insertRow();
 
-    container.classList.remove("export-mode");
-    data.textContent = "";
-  });
-}
+      const tdNome = linha.insertCell();
+      tdNome.textContent = j.nome;
+      tdNome.contentEditable = "true";
+      tdNome.onblur = ()=>{
+        const novoNome = tdNome.textContent.trim();
+        if(!novoNome){
+          tdNome.textContent = j.nome;
+          return;
+        }
+        const keyNovo = chaveNome(novoNome);
+        const keyAtual = chaveNome(j.nome);
+        const existeEmOutro =
+          listaJogadores.some(x => chaveNome(x.nome) === keyNovo && chaveNome(x.nome) !== keyAtual) ||
+          rankingJogadores.some(x => chaveNome(x.nome) === keyNovo);
+
+        if(existeEmOutro){
+          alert("⚠️ Já existe um jogador com esse nome.");
+          tdNome.textContent = j.nome;
+          return;
+        }
+
+        j.nome = novoNome;
+        atualizarTudo();
+        scheduleSave("editar_nome_lista");
+      };
+
+      linha.insertCell().textContent = j.pontos || 0;
+      linha.insertCell().textContent = j.presencas || 0;
+      linha.insertCell().textContent = j.vitorias || 0;
+
+      const tdAcoes = linha.insertCell();
+      tdAcoes.className = "acoes";
+
+      const tdAnim = linha.cells[1]; // "Pontos"
+      tdAcoes.appendChild(criarBotoesPontuacao(j, tdAnim));
+    });
+  }
+
+  function atualizarTabelaRanking(){
+    const tabela = document.getElementById("rankingTable");
+    tabela.innerHTML = `<tr>
+      <th>Posição</th>
+      <th>Nome</th>
+      <th>Pontos</th>
+      <th>Presenças</th>
+      <th>Vitórias</th>
+      <th class="acoes">Ações</th>
+    </tr>`;
+
+    const ativos = rankingJogadores.filter(j =>
+      (j.pontos||0) > 0 || (j.presencas||0) > 0 || (j.vitorias||0) > 0
+    );
+
+    rankingJogadores = ativos;
+    deduplicarPorNome(rankingJogadores);
+
+    if(rankingJogadores.length === 0){
+      const linha = tabela.insertRow();
+      linha.classList.add("empty");
+      const td = linha.insertCell();
+      td.colSpan = 6;
+      td.textContent = "Ainda não há pontuação. Pontue um inscrito para ele entrar no ranking.";
+      return;
+    }
+
+    rankingJogadores.sort((a,b) => {
+      if((b.pontos||0) !== (a.pontos||0)) return (b.pontos||0) - (a.pontos||0);
+      if((b.vitorias||0) !== (a.vitorias||0)) return (b.vitorias||0) - (a.vitorias||0);
+      return (b.presencas||0) - (a.presencas||0);
+    });
+
+    rankingJogadores.forEach((j,i)=>{
+      const linha = tabela.insertRow();
+      if(i < 8) linha.classList.add("pos1_8");
+      else if(i < 17) linha.classList.add("pos9_17");
+
+      linha.insertCell().textContent = i+1;
+
+      let tdNome = linha.insertCell();
+      tdNome.textContent = j.nome;
+      tdNome.contentEditable = "true";
+      tdNome.onblur = ()=>{
+        const novoNome = tdNome.textContent.trim();
+        if(!novoNome){
+          tdNome.textContent = j.nome;
+          return;
+        }
+        const keyNovo = chaveNome(novoNome);
+        const keyAtual = chaveNome(j.nome);
+        const colisao =
+          rankingJogadores.some(x => chaveNome(x.nome) === keyNovo && chaveNome(x.nome) !== keyAtual) ||
+          listaJogadores.some(x => chaveNome(x.nome) === keyNovo);
+
+        if(colisao){
+          alert("⚠️ Já existe um jogador com esse nome.");
+          tdNome.textContent = j.nome;
+          return;
+        }
+        j.nome = novoNome;
+        atualizarTudo();
+        scheduleSave("editar_nome_ranking");
+      };
+
+      let tdP = linha.insertCell();
+      tdP.textContent = j.pontos || 0;
+      tdP.contentEditable = "true";
+      tdP.onblur = ()=>{
+        j.pontos = parseInt(tdP.textContent) || 0;
+        talvezRetornarParaLista(j);
+        atualizarTudo();
+        scheduleSave("editar_pontos");
+      };
+
+      let tdPres = linha.insertCell();
+      tdPres.textContent = j.presencas || 0;
+      tdPres.contentEditable = "true";
+      tdPres.onblur = ()=>{
+        j.presencas = parseInt(tdPres.textContent) || 0;
+        talvezRetornarParaLista(j);
+        atualizarTudo();
+        scheduleSave("editar_presencas");
+      };
+
+      let tdVit = linha.insertCell();
+      tdVit.textContent = j.vitorias || 0;
+      tdVit.contentEditable = "true";
+      tdVit.onblur = ()=>{
+        j.vitorias = parseInt(tdVit.textContent) || 0;
+        talvezRetornarParaLista(j);
+        atualizarTudo();
+        scheduleSave("editar_vitorias");
+      };
+
+      const celulaAcoes = linha.insertCell();
+      celulaAcoes.className = "acoes";
+      celulaAcoes.appendChild(criarBotoesPontuacao(j, tdP));
+    });
+  }
+
+  function exportarTabela(){
+    const container = document.getElementById("rankingContainer");
+    const data = document.getElementById("dataExportacao");
+    const agora = new Date();
+    data.textContent = "Atualizado em: " + agora.toLocaleDateString("pt-BR") + " às " + agora.toLocaleTimeString("pt-BR");
+
+    container.classList.add("export-mode");
+    html2canvas(container).then(canvas=>{
+      const link = document.createElement("a");
+      link.download = "ranking_home_ras_2026.png";
+      link.href = canvas.toDataURL();
+      link.click();
+
+      container.classList.remove("export-mode");
+      data.textContent = "";
+    });
+  }
+
+  // =========================
+  //  BUTTONS
+  // =========================
+  document.getElementById("btnSalvar").addEventListener("click", () => salvarNaNuvem("manual"));
+  document.getElementById("btnAdicionar").addEventListener("click", adicionarJogador);
+  document.getElementById("btnAtualizar").addEventListener("click", atualizarTudo);
+  document.getElementById("btnExportar").addEventListener("click", exportarTabela);
+
+  // Primeira renderização (caso o snapshot ainda não tenha vindo)
+  atualizarTudo();
 </script>
 
 </body>
