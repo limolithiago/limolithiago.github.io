@@ -19,7 +19,7 @@
 
   .topo {
     width: 100%;
-    max-width: 750px;
+    max-width: 1200px;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
@@ -29,7 +29,7 @@
 
   .btn {
     flex: 1;
-    min-width: 140px;
+    min-width: 160px;
     background: #ffcc00;
     color: #3e2723;
     border: none;
@@ -45,7 +45,7 @@
 
   .status {
     width: 100%;
-    max-width: 750px;
+    max-width: 1200px;
     display: flex;
     gap: 8px;
     align-items: center;
@@ -68,10 +68,24 @@
     white-space: nowrap;
   }
 
+  /* ====== LAYOUT LADO A LADO ====== */
+  .layout {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    justify-content: center;
+    flex-wrap: wrap; /* no mobile vira 1 em cima da outra */
+  }
+  .painel {
+    flex: 1 1 520px;
+    min-width: 320px;
+  }
+
   /* Caixa de inscritos */
   .inscritos {
     width: 100%;
-    max-width: 750px;
     background: #ffffff;
     border: 2px solid #ffcc00;
     border-radius: 12px;
@@ -95,26 +109,13 @@
     margin-bottom: 10px;
   }
 
-  .inscritos table { width: 100%; border-collapse: collapse; font-size: 13px; }
-  .inscritos th, .inscritos td {
-    padding: 6px;
-    text-align: center;
-    border-bottom: 1px solid #e0e0e0;
-    border-right: 1px solid #e0e0e0;
-    color: #000;
-  }
-  .inscritos th {
-    background-color: #ffecb3;
-    border-bottom: 2px solid #3e2723;
-  }
-  .inscritos tr:hover { background-color: rgba(0,0,0,0.04); }
-
   .legenda {
     width: 100%;
-    max-width: 750px;
+    max-width: 1200px;
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
+    margin-top: 4px;
     margin-bottom: 2px;
     gap: 12px;
     font-size: 13px;
@@ -136,8 +137,6 @@
     border-radius: 12px;
     box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     width: 100%;
-    max-width: 750px;
-    margin-bottom: 20px;
     border: 2px solid #ffcc00;
     color: #fff;
     font-weight: bold;
@@ -167,13 +166,13 @@
   }
   .logo-certificado img { width: 80px; height: 80px; }
 
-  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; background: #fff; border-radius: 8px; overflow: hidden; }
   th, td { padding: 6px; text-align: center; border-bottom: 1px solid #a1887f; border-right: 1px solid #a1887f; color: #000; }
   th { background-color: #ffcc00; color: #000; border-bottom: 2px solid #3e2723; }
   tr.pos1_8 td { background: #81d4fa; color: #000; }
   tr.pos9_17 td { background: #ff8a80; color: #000; }
   tr.empty td { color: #555; }
-  tr:hover { background-color: rgba(0,0,0,0.1); }
+  tr:hover { background-color: rgba(0,0,0,0.06); }
 
   td[contenteditable="true"] {
     background: rgba(255,236,179,0.3);
@@ -189,16 +188,15 @@
     font-size: 11px;
     cursor: pointer;
   }
-  .btn-presenca { background: #4CAF50; }
+
+  /* Botões (agora só 1º ao 6º) */
+  .btn-campeao { background: #FF5722; }
   .btn-segundo { background: #2196F3; }
   .btn-terceiro { background: #9C27B0; }
   .btn-quarto { background: #FF9800; }
   .btn-quinto { background: #795548; }
-  .btn-campeao { background: #FF5722; }
   .btn-sexto { background: #8BC34A; }
-  .btn-setimo { background: #00BCD4; }
-  .btn-oitavo { background: #FFC107; color:#000; }
-  .btn-nono { background: #9E9E9E; }
+
   .btn-excluir { background: #e53935; color: #fff; padding: 4px 8px; font-size: 11px; border-radius: 4px; cursor: pointer; }
 
   .animacao-pontos {
@@ -271,43 +269,50 @@
   <div class="pill" id="pillSync">🔄 Sync: aguardando...</div>
 </div>
 
-<!-- Lista de inscritos (separada) -->
-<div class="inscritos" id="inscritosContainer">
-  <h3>📋 Lista de Jogadores (Inscritos)</h3>
-  <div class="sub">Os jogadores só entram no ranking quando pontuarem pela primeira vez.</div>
-  <table id="listaTable">
-    <tr>
-      <th>Nome</th>
-      <th>Pontos</th>
-      <th>Presenças</th>
-      <th>Vitórias</th>
-      <th class="acoes">Ações</th>
-    </tr>
-  </table>
+<div class="layout">
+  <!-- Lista de inscritos (separada) -->
+  <div class="painel">
+    <div class="inscritos" id="inscritosContainer">
+      <h3>📋 Lista de Jogadores (Inscritos)</h3>
+      <div class="sub">Os jogadores só entram no ranking quando pontuarem pela primeira vez.</div>
+      <table id="listaTable">
+        <tr>
+          <th>Nome</th>
+          <th>Pontos</th>
+          <th>Presenças</th>
+          <th>Vitórias</th>
+          <th class="acoes">Ações</th>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Ranking -->
+  <div class="painel">
+    <div class="ranking" id="rankingContainer">
+      <div class="logo-certificado">
+        <img src="https://cdn-icons-png.flaticon.com/512/616/616490.png" alt="Logo Poker">
+      </div>
+      <h2>🏆 Ranking Home Ras 2026</h2>
+      <div class="data-atualizacao" id="dataExportacao"></div>
+
+      <table id="rankingTable">
+        <tr>
+          <th>Posição</th>
+          <th>Nome</th>
+          <th>Pontos</th>
+          <th>Presenças</th>
+          <th>Vitórias</th>
+          <th class="acoes">Ações</th>
+        </tr>
+      </table>
+    </div>
+  </div>
 </div>
 
 <div class="legenda">
   <div><span class="azul"></span> Classificados para a mesa final</div>
   <div><span class="vermelho"></span> Repescagem final</div>
-</div>
-
-<div class="ranking" id="rankingContainer">
-  <div class="logo-certificado">
-    <img src="https://cdn-icons-png.flaticon.com/512/616/616490.png" alt="Logo Poker">
-  </div>
-  <h2>🏆 Ranking Home Ras 2026</h2>
-  <div class="data-atualizacao" id="dataExportacao"></div>
-
-  <table id="rankingTable">
-    <tr>
-      <th>Posição</th>
-      <th>Nome</th>
-      <th>Pontos</th>
-      <th>Presenças</th>
-      <th>Vitórias</th>
-      <th class="acoes">Ações</th>
-    </tr>
-  </table>
 </div>
 
 <!-- Firebase + App -->
@@ -329,71 +334,43 @@
     measurementId: "G-BH5DG8365L"
   };
 
-  // Documento único do ranking (você pode trocar o ID se quiser ter mais de um ranking)
   const DOC_PATH = { col: "rankings", id: "homeRas2026" };
 
-  // =========================
-  //  STATE
-  // =========================
   let listaJogadores = [];
   let rankingJogadores = [];
 
   const pillCloud = document.getElementById("pillCloud");
   const pillSync = document.getElementById("pillSync");
 
-  // Evita loop: quando receber update da nuvem, não re-salvar imediatamente
   let applyingRemote = false;
-
-  // Debounce do autosave
   let saveTimer = null;
 
-  // =========================
-  //  FIREBASE INIT
-  // =========================
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const auth = getAuth(app);
 
-  // Persistência offline (Firestore guarda cache local e sincroniza quando voltar)
-  // Obs: isso NÃO substitui a nuvem; é só um bônus pra funcionar sem internet.
-  try {
-    await enableIndexedDbPersistence(db);
-  } catch (e) {
-    // Pode falhar em alguns cenários (ex.: múltiplas abas abertas)
-  }
+  try { await enableIndexedDbPersistence(db); } catch (e) {}
 
-  // Login anônimo (recomendo ter Rules exigindo auth != null)
-  try {
-    await signInAnonymously(auth);
-  } catch (e) {
+  try { await signInAnonymously(auth); } catch (e) {
     pillCloud.textContent = "☁️ Cloud: erro no login";
     console.error(e);
   }
 
   onAuthStateChanged(auth, (user) => {
-    if (user) {
-      pillCloud.textContent = "☁️ Cloud: conectado";
-    } else {
-      pillCloud.textContent = "☁️ Cloud: desconectado";
-    }
+    pillCloud.textContent = user ? "☁️ Cloud: conectado" : "☁️ Cloud: desconectado";
   });
 
   const rankingRef = doc(db, DOC_PATH.col, DOC_PATH.id);
 
-  // =========================
-  //  HELPERS
-  // =========================
   function normalizarJogador(j){
     j.nome = (j.nome ?? "").toString().trim();
     j.pontos = parseInt(j.pontos) || 0;
     j.presencas = parseInt(j.presencas) || 0;
     j.vitorias = parseInt(j.vitorias) || 0;
   }
-
   function chaveNome(nome){
     return (nome || "").toString().trim().toLowerCase();
   }
-
   function inserirSeNaoExiste(arr, jogador){
     const key = chaveNome(jogador.nome);
     if(!key) return;
@@ -405,13 +382,11 @@
       vitorias: jogador.vitorias || 0
     });
   }
-
   function removerPorNome(arr, nome){
     const key = chaveNome(nome);
     const idx = arr.findIndex(x => chaveNome(x.nome) === key);
     if(idx >= 0) arr.splice(idx, 1);
   }
-
   function deduplicarPorNome(arr){
     const seen = new Set();
     for(let i = arr.length - 1; i >= 0; i--){
@@ -420,12 +395,10 @@
       else seen.add(k);
     }
   }
-
   function marcarComoAtivo(j){
     removerPorNome(listaJogadores, j.nome);
     inserirSeNaoExiste(rankingJogadores, j);
   }
-
   function talvezRetornarParaLista(j){
     const ativo = (j.pontos||0) > 0 || (j.presencas||0) > 0 || (j.vitorias||0) > 0;
     if(!ativo){
@@ -433,7 +406,6 @@
       inserirSeNaoExiste(listaJogadores, j);
     }
   }
-
   function mostrarAnimacao(celula, valor){
     const anim = document.createElement("div");
     anim.className = "animacao-pontos";
@@ -443,22 +415,16 @@
     setTimeout(()=> anim.remove(), 1000);
   }
 
-  // =========================
-  //  FIRESTORE SYNC
-  // =========================
   function scheduleSave(reason = "update"){
     if (applyingRemote) return;
     pillSync.textContent = "🔄 Sync: alterações pendentes...";
     if (saveTimer) clearTimeout(saveTimer);
-    saveTimer = setTimeout(async () => {
-      await salvarNaNuvem(reason);
-    }, 350);
+    saveTimer = setTimeout(async () => { await salvarNaNuvem(reason); }, 350);
   }
 
   async function salvarNaNuvem(reason = "manual"){
     if (applyingRemote) return;
     try {
-      // Normaliza antes de salvar
       listaJogadores.forEach(normalizarJogador);
       rankingJogadores.forEach(normalizarJogador);
 
@@ -476,11 +442,22 @@
     }
   }
 
-  // Ouve mudanças da nuvem (tempo real)
+  // =========================
+  //  PONTUAÇÃO (NOVO: SÓ 1º AO 6º)
+  //  - Qualquer colocação soma +1 presença
+  //  - Campeão soma +1 vitória
+  // =========================
+  const PONTOS = [
+    { valor:125, nome:'Campeão', classe:'btn-campeao', adicionaVitoria:true, adicionaPresenca:true },
+    { valor:100, nome:'2º Lugar', classe:'btn-segundo', adicionaPresenca:true },
+    { valor:80,  nome:'3º Lugar', classe:'btn-terceiro', adicionaPresenca:true },
+    { valor:60,  nome:'4º Lugar', classe:'btn-quarto', adicionaPresenca:true },
+    { valor:40,  nome:'5º Lugar', classe:'btn-quinto', adicionaPresenca:true },
+    { valor:20,  nome:'6º Lugar', classe:'btn-sexto', adicionaPresenca:true }
+  ];
+
   onSnapshot(rankingRef, (snap) => {
     if (!snap.exists()) {
-      // Se não existe ainda, cria vazio (primeira vez)
-      // Não forçamos salvar aqui, só inicializamos UI.
       atualizarTudo();
       pillSync.textContent = "🔄 Sync: documento novo (vazio)";
       return;
@@ -498,7 +475,6 @@
     deduplicarPorNome(listaJogadores);
     deduplicarPorNome(rankingJogadores);
 
-    // Se no ranking tiver gente zerada, manda pra lista
     rankingJogadores = rankingJogadores.filter(j=>{
       const ativo = (j.pontos||0) > 0 || (j.presencas||0) > 0 || (j.vitorias||0) > 0;
       if(!ativo){
@@ -513,22 +489,6 @@
 
     pillSync.textContent = "🔄 Sync: atualizado da nuvem";
   });
-
-  // =========================
-  //  UI / TABLES
-  // =========================
-  const PONTOS = [
-    { valor:10, nome:'Presença', classe:'btn-presenca', adicionaPresenca:true },
-    { valor:250, nome:'Campeão', classe:'btn-campeao', adicionaVitoria:true },
-    { valor:150, nome:'Segundo', classe:'btn-segundo' },
-    { valor:100, nome:'Terceiro', classe:'btn-terceiro' },
-    { valor:70, nome:'Quarto', classe:'btn-quarto' },
-    { valor:50, nome:'Quinto', classe:'btn-quinto' },
-    { valor:40, nome:'Sexto', classe:'btn-sexto' },
-    { valor:30, nome:'Sétimo', classe:'btn-setimo' },
-    { valor:20, nome:'Oitavo', classe:'btn-oitavo' },
-    { valor:10, nome:'Nono', classe:'btn-nono' }
-  ];
 
   function criarBotoesPontuacao(j, tdParaAnimacao){
     const containerBtns = document.createElement("div");
@@ -639,7 +599,6 @@
           tdNome.textContent = j.nome;
           return;
         }
-
         j.nome = novoNome;
         atualizarTudo();
         scheduleSave("editar_nome_lista");
@@ -680,7 +639,7 @@
       linha.classList.add("empty");
       const td = linha.insertCell();
       td.colSpan = 6;
-      td.textContent = "Ainda não há pontuação. Pontue um inscrito para ele entrar no ranking.";
+      td.textContent = "Ainda não há pontuação. Atribua uma colocação para o jogador entrar no ranking.";
       return;
     }
 
@@ -776,15 +735,11 @@
     });
   }
 
-  // =========================
-  //  BUTTONS
-  // =========================
   document.getElementById("btnSalvar").addEventListener("click", () => salvarNaNuvem("manual"));
   document.getElementById("btnAdicionar").addEventListener("click", adicionarJogador);
   document.getElementById("btnAtualizar").addEventListener("click", atualizarTudo);
   document.getElementById("btnExportar").addEventListener("click", exportarTabela);
 
-  // Primeira renderização (caso o snapshot ainda não tenha vindo)
   atualizarTudo();
 </script>
 
